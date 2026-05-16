@@ -69,9 +69,7 @@
 
 #### 2. 客户端封锁（Client Blocking）
 在 API 请求层拦截特定客户端（如 SillyTavern / 酒馆）：
-- 通过 User-Agent 检测 `node-fetch` 等特征进行拦截
-- **相关文件**：`middleware/client-block.go`、`router/relay-router.go`
-- **环境变量**：`BLOCK_NODEFETCH=true` 启用封锁
+原理概不论述
 
 #### 3. 经典主题 Service Worker 残留修复
 从 default 主题回退到 classic 主题时，旧的 Service Worker 会导致 WebView 浏览器控制台 404。
