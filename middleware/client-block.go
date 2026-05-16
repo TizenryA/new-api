@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -29,7 +30,7 @@ func ClientBlock() gin.HandlerFunc {
 
 		// 检查 node-fetch（SillyTavern 特征）
 		if blockNodeFetch && strings.Contains(strings.ToLower(userAgent), "node-fetch") {
-			logger.LogWarn(c.Request.Context(), "client-block: blocked node-fetch request from user %d, UA: %s", userId, userAgent)
+			logger.LogWarn(c.Request.Context(), fmt.Sprintf("client-block: blocked node-fetch request from user %d, UA: %s", userId, userAgent))
 			c.JSON(http.StatusForbidden, gin.H{
 				"error": gin.H{
 					"message": "该客户端不被允许访问此服务",
@@ -44,7 +45,7 @@ func ClientBlock() gin.HandlerFunc {
 		// 检查自定义 UA 黑名单
 		for _, blocked := range blockedUAs {
 			if blocked != "" && strings.Contains(strings.ToLower(userAgent), strings.ToLower(blocked)) {
-				logger.LogWarn(c.Request.Context(), "client-block: blocked request from user %d, matched UA keyword: %s", userId, blocked)
+				logger.LogWarn(c.Request.Context(), fmt.Sprintf("client-block: blocked request from user %d, matched UA keyword: %s", userId, blocked))
 				c.JSON(http.StatusForbidden, gin.H{
 					"error": gin.H{
 						"message": "该客户端不被允许访问此服务",
@@ -61,7 +62,7 @@ func ClientBlock() gin.HandlerFunc {
 		if requireHeader != "" {
 			headerValue := c.GetHeader(requireHeader)
 			if headerValue == "" {
-				logger.LogWarn(c.Request.Context(), "client-block: missing required header '%s' from user %d", requireHeader, userId)
+				logger.LogWarn(c.Request.Context(), fmt.Sprintf("client-block: missing required header '%s' from user %d", requireHeader, userId))
 				c.JSON(http.StatusForbidden, gin.H{
 					"error": gin.H{
 						"message": "缺少必要的认证头",
@@ -73,7 +74,7 @@ func ClientBlock() gin.HandlerFunc {
 				return
 			}
 			if requireHeaderValue != "" && headerValue != requireHeaderValue {
-				logger.LogWarn(c.Request.Context(), "client-block: invalid header value from user %d", userId)
+				logger.LogWarn(c.Request.Context(), fmt.Sprintf("client-block: invalid header value from user %d", userId))
 				c.JSON(http.StatusForbidden, gin.H{
 					"error": gin.H{
 						"message": "客户端认证失败",
