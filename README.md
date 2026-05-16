@@ -68,13 +68,27 @@
   - `DISCORD_BANNED_GUILD_IDS` — 黑名单服务器 ID（逗号分隔多个）
 
 #### 2. 客户端封锁（Client Blocking）
-在 API 请求层拦截特定客户端（如 SillyTavern / 酒馆）：
-原理概不论述
+在 API 请求层拦截特定客户端，阻止非授权客户端访问服务。
+- 通过环境变量配置拦截规则，不设置则不生效（默认放行所有）
+- **环境变量**：
+  - `BLOCK_NODEFETCH` — 设为 `true` 拦截特定默认 UA 的请求
+  - `BLOCKED_USER_AGENTS` — 自定义 UA 关键词黑名单（逗号分隔，如 `badbot,crawler`）
+  - `REQUIRE_CLIENT_HEADER` — 要求请求必须携带指定 Header（如 `X-App-Token`）
+  - `REQUIRE_CLIENT_HEADER_VALUE` — 该 Header 的值必须匹配此值（不设置则只检查 Header 存在性）
+- **相关文件**：`middleware/client-block.go`、`router/relay-router.go`
+- **已注册路由**：`/v1`（OpenAI 兼容）、`/v1beta`（Gemini 兼容），在 TokenAuth 之后、RateLimit 之前生效
 
 #### 3. 经典主题 Service Worker 残留修复
 从 default 主题回退到 classic 主题时，旧的 Service Worker 会导致 WebView 浏览器控制台 404。
 - 在 classic 主题的 `index.html` 中自动注销残留 Service Worker
 - **相关文件**：`web/classic/index.html`
+
+#### 4. WebView / 低版本浏览器兼容性
+针对 Android WebView 等低版本浏览器的兼容性修复：
+- **动态导入重试**：classic 主题的 lazy import 在 WebView 中偶尔失败，增加了自动重试机制
+- **构建目标降级**：Vite 构建目标从默认值降低到 `es2018`，确保 WebView 148 等环境能正常加载
+- **ErrorBoundary 增强**：classic 主题的错误边界组件增加了详细的错误信息展示，便于移动端调试
+- **相关文件**：`web/classic/src/App.jsx`、`web/classic/vite.config.js`、`web/classic/src/components/common/ErrorBoundary.jsx`
 
 ---
 
