@@ -52,6 +52,34 @@
 
 </div>
 
+> **Fork 说明**：本仓库基于 [QuantumNous/new-api](https://github.com/QuantumNous/new-api) 修改，为 Tavo 社区公益站定制了以下功能。
+
+### ✨ Fork 改动
+
+#### 1. Discord OAuth 登录验证（Discord Gate）
+在 Discord OAuth 登录流程中增加了服务器成员身份校验，阻止非社区用户注册：
+- **黑名单机制**：检查用户是否在指定黑名单服务器中，在则拒绝登录
+- **白名单机制**：检查用户是否在指定白名单服务器中，不在则拒绝登录
+- **检查顺序**：先黑名单 → 再白名单
+- **前端改动**：OAuth scope 增加 `guilds.members.read`，两个前端均已适配
+- **相关文件**：`oauth/discord.go`、`web/default/src/lib/oauth.ts`、`web/classic/src/helpers/api.js`
+- **环境变量**：
+  - `DISCORD_ALLOWED_GUILD_ID` — 白名单服务器 ID
+  - `DISCORD_BANNED_GUILD_IDS` — 黑名单服务器 ID（逗号分隔多个）
+
+#### 2. 客户端封锁（Client Blocking）
+在 API 请求层拦截特定客户端（如 SillyTavern / 酒馆）：
+- 通过 User-Agent 检测 `node-fetch` 等特征进行拦截
+- **相关文件**：`middleware/client-block.go`、`router/relay-router.go`
+- **环境变量**：`BLOCK_NODEFETCH=true` 启用封锁
+
+#### 3. 经典主题 Service Worker 残留修复
+从 default 主题回退到 classic 主题时，旧的 Service Worker 会导致 WebView 浏览器控制台 404。
+- 在 classic 主题的 `index.html` 中自动注销残留 Service Worker
+- **相关文件**：`web/classic/index.html`
+
+---
+
 ## 📝 Project Description
 
 > [!IMPORTANT]
