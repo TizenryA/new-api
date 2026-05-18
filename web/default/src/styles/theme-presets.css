@@ -386,3 +386,50 @@ For commercial licensing, please contact support@quantumnous.com
     width: 100%;
   }
 }
+
+/* ── Neo-Brutalism ──────────────────────────────────────────────────── */
+/* 粗野主义 + 饱和糖果色 + 粗描边 + 偏移阴影 */
+[data-theme-preset='neo-brutalism'] {
+  /* 饱和糖果色 */
+  --primary: oklch(0.65 0.25 350);  /* 粉 */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.85 0.18 85);  /* 黄 */
+  --secondary-foreground: oklch(0.2 0.05 85);
+  --accent: oklch(0.65 0.2 250);  /* 蓝 */
+  --accent-foreground: oklch(1 0 0);
+  --ring: oklch(0.65 0.25 350);
+  --chart-1: oklch(0.65 0.25 350);  /* 粉 */
+  --chart-2: oklch(0.85 0.18 85);   /* 黄 */
+  --chart-3: oklch(0.65 0.2 250);   /* 蓝 */
+  --chart-4: oklch(0.7 0.2 145);    /* 绿 */
+  --chart-5: oklch(0.75 0.2 65);    /* 橙 */
+  --sidebar-primary: oklch(0.65 0.25 350);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.85 0.18 85);
+  --sidebar-accent-foreground: oklch(0.2 0.05 85);
+  --sidebar-ring: oklch(0.65 0.25 350);
+  --radius: 1rem;
+  
+  /* 粗边框 */
+  --border: oklch(0.2 0.02 270);
+}
+.dark [data-theme-preset='neo-brutalism'] {
+  --primary: oklch(0.7 0.25 350);
+  --primary-foreground: oklch(0.15 0.02 270);
+  --secondary: oklch(0.8 0.18 85);
+  --secondary-foreground: oklch(0.15 0.02 270);
+  --accent: oklch(0.7 0.2 250);
+  --accent-foreground: oklch(0.15 0.02 270);
+  --ring: oklch(0.7 0.25 350);
+  --chart-1: oklch(0.7 0.25 350);
+  --chart-2: oklch(0.8 0.18 85);
+  --chart-3: oklch(0.7 0.2 250);
+  --chart-4: oklch(0.75 0.2 145);
+  --chart-5: oklch(0.8 0.2 65);
+  --sidebar-primary: oklch(0.7 0.25 350);
+  --sidebar-primary-foreground: oklch(0.15 0.02 270);
+  --sidebar-accent: oklch(0.8 0.18 85);
+  --sidebar-accent-foreground: oklch(0.15 0.02 270);
+  --sidebar-ring: oklch(0.7 0.25 350);
+  --border: oklch(0.5 0.05 270);
+}

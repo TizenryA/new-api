@@ -1,0 +1,316 @@
+/* ============================================================================
+ * Neo-Brutalism Theme Preset
+ * 粗野主义 + 饱和糖果色 + 粗描边 + 偏移阴影
+ * ============================================================================ */
+
+/* Neo-Brutalism Light Theme */
+[data-theme="neo-brutalism"] {
+  --radius: 0.75rem;
+  
+  /* 饱和糖果色 */
+  --background: oklch(0.98 0.02 90);  /* 暖白 */
+  --foreground: oklch(0.15 0.02 270);  /* 深黑 */
+  
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.02 270);
+  
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.02 270);
+  
+  /* 主色：饱和粉 */
+  --primary: oklch(0.65 0.25 350);
+  --primary-foreground: oklch(1 0 0);
+  
+  /* 次色：饱和黄 */
+  --secondary: oklch(0.85 0.18 85);
+  --secondary-foreground: oklch(0.2 0.05 85);
+  
+  --muted: oklch(0.95 0.03 90);
+  --muted-foreground: oklch(0.45 0.05 270);
+  
+  /* 强调色：饱和蓝 */
+  --accent: oklch(0.65 0.2 250);
+  --accent-foreground: oklch(1 0 0);
+  
+  /* 危险：饱和红 */
+  --destructive: oklch(0.6 0.25 25);
+  --destructive-foreground: oklch(1 0 0);
+  
+  /* 成功：饱和绿 */
+  --success: oklch(0.7 0.2 145);
+  --success-foreground: oklch(1 0 0);
+  
+  /* 警告：饱和橙 */
+  --warning: oklch(0.75 0.2 65);
+  --warning-foreground: oklch(0.2 0.05 65);
+  
+  /* 信息：饱和蓝 */
+  --info: oklch(0.6 0.2 230);
+  --info-foreground: oklch(1 0 0);
+  
+  --neutral: oklch(0.5 0.05 270);
+  --neutral-foreground: oklch(1 0 0);
+  
+  /* 粗边框 */
+  --border: oklch(0.2 0.02 270);
+  --input: oklch(0.9 0.02 90);
+  --ring: oklch(0.65 0.25 350);
+  
+  /* 图表色：糖果色系 */
+  --chart-1: oklch(0.65 0.25 350);  /* 粉 */
+  --chart-2: oklch(0.85 0.18 85);   /* 黄 */
+  --chart-3: oklch(0.65 0.2 250);   /* 蓝 */
+  --chart-4: oklch(0.7 0.2 145);    /* 绿 */
+  --chart-5: oklch(0.75 0.2 65);    /* 橙 */
+  
+  /* 侧边栏 */
+  --sidebar: oklch(0.95 0.03 90);
+  --sidebar-foreground: oklch(0.15 0.02 270);
+  --sidebar-primary: oklch(0.65 0.25 350);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.85 0.18 85);
+  --sidebar-accent-foreground: oklch(0.2 0.05 85);
+  --sidebar-border: oklch(0.2 0.02 270);
+  --sidebar-ring: oklch(0.65 0.25 350);
+}
+
+/* Neo-Brutalism Dark Theme */
+[data-theme="neo-brutalism"].dark,
+.dark [data-theme="neo-brutalism"] {
+  --background: oklch(0.18 0.02 270);
+  --foreground: oklch(0.95 0.02 90);
+  
+  --card: oklch(0.22 0.02 270);
+  --card-foreground: oklch(0.95 0.02 90);
+  
+  --popover: oklch(0.22 0.02 270);
+  --popover-foreground: oklch(0.95 0.02 90);
+  
+  --primary: oklch(0.7 0.25 350);
+  --primary-foreground: oklch(0.15 0.02 270);
+  
+  --secondary: oklch(0.8 0.18 85);
+  --secondary-foreground: oklch(0.15 0.02 270);
+  
+  --muted: oklch(0.25 0.03 270);
+  --muted-foreground: oklch(0.65 0.05 270);
+  
+  --accent: oklch(0.7 0.2 250);
+  --accent-foreground: oklch(0.15 0.02 270);
+  
+  --destructive: oklch(0.65 0.25 25);
+  --destructive-foreground: oklch(0.15 0.02 270);
+  
+  --success: oklch(0.75 0.2 145);
+  --success-foreground: oklch(0.15 0.02 270);
+  
+  --warning: oklch(0.8 0.2 65);
+  --warning-foreground: oklch(0.15 0.02 270);
+  
+  --info: oklch(0.65 0.2 230);
+  --info-foreground: oklch(0.15 0.02 270);
+  
+  --neutral: oklch(0.6 0.05 270);
+  --neutral-foreground: oklch(0.15 0.02 270);
+  
+  --border: oklch(0.5 0.05 270);
+  --input: oklch(0.25 0.03 270);
+  --ring: oklch(0.7 0.25 350);
+  
+  --sidebar: oklch(0.2 0.02 270);
+  --sidebar-foreground: oklch(0.95 0.02 90);
+  --sidebar-primary: oklch(0.7 0.25 350);
+  --sidebar-primary-foreground: oklch(0.15 0.02 270);
+  --sidebar-accent: oklch(0.8 0.18 85);
+  --sidebar-accent-foreground: oklch(0.15 0.02 270);
+  --sidebar-border: oklch(0.5 0.05 270);
+  --sidebar-ring: oklch(0.7 0.25 350);
+}
+
+/* ============================================================================
+ * Neo-Brutalism 全局样式
+ * ============================================================================ */
+
+/* 粗边框基础类 */
+[data-theme="neo-brutalism"] .nb-border {
+  border: 3px solid var(--foreground);
+}
+
+[data-theme="neo-brutalism"] .nb-border-thick {
+  border: 4px solid var(--foreground);
+}
+
+/* 偏移阴影 */
+[data-theme="neo-brutalism"] .nb-shadow {
+  box-shadow: 4px 4px 0px var(--foreground);
+}
+
+[data-theme="neo-brutalism"] .nb-shadow-md {
+  box-shadow: 6px 6px 0px var(--foreground);
+}
+
+[data-theme="neo-brutalism"] .nb-shadow-lg {
+  box-shadow: 8px 8px 0px var(--foreground);
+}
+
+/* Hover 交互效果 */
+[data-theme="neo-brutalism"] .nb-hover {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+[data-theme="neo-brutalism"] .nb-hover:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--foreground);
+}
+
+[data-theme="neo-brutalism"] .nb-hover:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--foreground);
+}
+
+/* 卡片样式 */
+[data-theme="neo-brutalism"] .nb-card {
+  border: 3px solid var(--foreground);
+  box-shadow: 5px 5px 0px var(--foreground);
+  border-radius: var(--radius);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+[data-theme="neo-brutalism"] .nb-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0px var(--foreground);
+}
+
+/* 按钮样式 */
+[data-theme="neo-brutalism"] .nb-btn {
+  border: 3px solid var(--foreground);
+  box-shadow: 4px 4px 0px var(--foreground);
+  border-radius: var(--radius);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+[data-theme="neo-brutalism"] .nb-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--foreground);
+}
+
+[data-theme="neo-brutalism"] .nb-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--foreground);
+}
+
+/* 输入框样式 */
+[data-theme="neo-brutalism"] .nb-input {
+  border: 3px solid var(--foreground);
+  border-radius: var(--radius);
+  background: var(--card);
+  transition: box-shadow 150ms ease;
+}
+
+[data-theme="neo-brutalism"] .nb-input:focus {
+  box-shadow: 4px 4px 0px var(--primary);
+  outline: none;
+}
+
+/* 贴纸效果 */
+[data-theme="neo-brutalism"] .nb-sticker {
+  display: inline-block;
+  padding: 0.25em 0.75em;
+  border: 3px solid var(--foreground);
+  border-radius: var(--radius);
+  font-weight: 700;
+  transform: rotate(-3deg);
+  box-shadow: 3px 3px 0px var(--foreground);
+}
+
+/* 涂鸦下划线 */
+[data-theme="neo-brutalism"] .nb-doodle-underline {
+  text-decoration: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 8'%3E%3Cpath d='M0,5 Q40,0 80,5 T160,5 T200,5' stroke='%23000' stroke-width='3' fill='none'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: bottom;
+  background-size: 200px 8px;
+  padding-bottom: 4px;
+}
+
+/* 噪点背景 */
+[data-theme="neo-brutalism"] .nb-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* 条纹背景 */
+[data-theme="neo-brutalism"] .nb-stripes {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    var(--muted) 10px,
+    var(--muted) 20px
+  );
+}
+
+/* 渐变色块（糖果色） */
+[data-theme="neo-brutalism"] .nb-gradient-candy {
+  background: linear-gradient(135deg, 
+    oklch(0.65 0.25 350), 
+    oklch(0.85 0.18 85), 
+    oklch(0.65 0.2 250)
+  );
+}
+
+/* 圆角大小调整 */
+[data-theme="neo-brutalism"] {
+  --radius: 1rem;
+  --radius-sm: 0.6rem;
+  --radius-md: 0.8rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.4rem;
+  --radius-2xl: 1.8rem;
+  --radius-3xl: 2.2rem;
+  --radius-4xl: 2.6rem;
+}
+
+/* 字体调整（粗黑/等宽） */
+[data-theme="neo-brutalism"] {
+  --font-sans: 'Space Grotesk', 'Public Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* 标题样式 */
+[data-theme="neo-brutalism"] h1,
+[data-theme="neo-brutalism"] h2,
+[data-theme="neo-brutalism"] h3,
+[data-theme="neo-brutalism"] h4 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* 链接样式 */
+[data-theme="neo-brutalism"] a {
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+}
+
+/* 滚动条样式 */
+[data-theme="neo-brutalism"] ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+[data-theme="neo-brutalism"] ::-webkit-scrollbar-track {
+  background: var(--muted);
+  border: 2px solid var(--foreground);
+}
+
+[data-theme="neo-brutalism"] ::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border: 2px solid var(--foreground);
+  border-radius: var(--radius);
+}
+
+[data-theme="neo-brutalism"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}

@@ -23,6 +23,7 @@ For commercial licensing, please contact support@quantumnous.com
 
 @import './theme.css';
 @import './theme-presets.css';
+@import './neo-brutalism.css';
 
 /* Shiki dual themes: token colors follow dark theme (pre background stays `bg-background` on the block) */
 @layer components {
@@ -582,4 +583,169 @@ For commercial licensing, please contact support@quantumnous.com
   .terminal-demo-pulse {
     animation: none !important;
   }
+}
+
+/* ============================================================================
+ * Neo-Brutalism 全局组件样式
+ * 当选择 neo-brutalism 主题时，自动应用粗边框、偏移阴影等效果
+ * ============================================================================ */
+
+/* 粗边框和偏移阴影 - 卡片 */
+[data-theme-preset='neo-brutalism'] [data-slot='card'],
+[data-theme-preset='neo-brutalism'] .card {
+  border-width: 3px !important;
+  box-shadow: 5px 5px 0px var(--foreground) !important;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+[data-theme-preset='neo-brutalism'] [data-slot='card']:hover,
+[data-theme-preset='neo-brutalism'] .card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0px var(--foreground) !important;
+}
+
+/* 粗边框和偏移阴影 - 按钮 */
+[data-theme-preset='neo-brutalism'] button:not([data-slot='dropdown-menu-item']):not([data-slot='select-item']),
+[data-theme-preset='neo-brutalism'] [data-slot='button'] {
+  border-width: 3px !important;
+  box-shadow: 4px 4px 0px var(--foreground) !important;
+  font-weight: 700;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+[data-theme-preset='neo-brutalism'] button:hover:not([data-slot='dropdown-menu-item']):not([data-slot='select-item']),
+[data-theme-preset='neo-brutalism'] [data-slot='button']:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--foreground) !important;
+}
+
+[data-theme-preset='neo-brutalism'] button:active:not([data-slot='dropdown-menu-item']):not([data-slot='select-item']),
+[data-theme-preset='neo-brutalism'] [data-slot='button']:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--foreground) !important;
+}
+
+/* 粗边框 - 输入框 */
+[data-theme-preset='neo-brutalism'] input,
+[data-theme-preset='neo-brutalism'] textarea,
+[data-theme-preset='neo-brutalism'] select {
+  border-width: 3px !important;
+  transition: box-shadow 150ms ease;
+}
+
+[data-theme-preset='neo-brutalism'] input:focus,
+[data-theme-preset='neo-brutalism'] textarea:focus,
+[data-theme-preset='neo-brutalism'] select:focus {
+  box-shadow: 4px 4px 0px var(--primary) !important;
+}
+
+/* 粗边框 - Badge */
+[data-theme-preset='neo-brutalism'] [data-slot='badge'],
+[data-theme-preset='neo-brutalism'] .badge {
+  border-width: 2px !important;
+  font-weight: 700;
+}
+
+/* 粗边框 - Dropdown Menu */
+[data-theme-preset='neo-brutalism'] [data-slot='dropdown-menu-content'],
+[data-theme-preset='neo-brutalism'] [data-slot='popover-content'] {
+  border-width: 3px !important;
+  box-shadow: 5px 5px 0px var(--foreground) !important;
+}
+
+/* 粗边框 - Dialog */
+[data-theme-preset='neo-brutalism'] [data-slot='dialog-content'],
+[data-theme-preset='neo-brutalism'] [data-slot='sheet-content'] {
+  border-width: 3px !important;
+  box-shadow: 8px 8px 0px var(--foreground) !important;
+}
+
+/* 粗边框 - Table */
+[data-theme-preset='neo-brutalism'] table {
+  border-width: 3px !important;
+}
+
+[data-theme-preset='neo-brutalism'] th,
+[data-theme-preset='neo-brutalism'] td {
+  border-width: 2px !important;
+}
+
+/* 粗边框 - Sidebar */
+[data-theme-preset='neo-brutalism'] [data-slot='sidebar'] {
+  border-width: 3px !important;
+}
+
+/* 字体调整 */
+[data-theme-preset='neo-brutalism'] {
+  --font-sans: 'Space Grotesk', 'Public Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* 标题加粗 */
+[data-theme-preset='neo-brutalism'] h1,
+[data-theme-preset='neo-brutalism'] h2,
+[data-theme-preset='neo-brutalism'] h3,
+[data-theme-preset='neo-brutalism'] h4 {
+  font-weight: 800 !important;
+  letter-spacing: -0.02em;
+}
+
+/* 链接样式 */
+[data-theme-preset='neo-brutalism'] a {
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+}
+
+/* 滚动条 */
+[data-theme-preset='neo-brutalism'] ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+[data-theme-preset='neo-brutalism'] ::-webkit-scrollbar-track {
+  background: var(--muted);
+  border: 2px solid var(--foreground);
+}
+
+[data-theme-preset='neo-brutalism'] ::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border: 2px solid var(--foreground);
+  border-radius: var(--radius);
+}
+
+/* 贴纸效果类 */
+[data-theme-preset='neo-brutalism'] .nb-sticker {
+  display: inline-block;
+  padding: 0.25em 0.75em;
+  border: 3px solid var(--foreground);
+  border-radius: var(--radius);
+  font-weight: 700;
+  transform: rotate(-3deg);
+  box-shadow: 3px 3px 0px var(--foreground);
+}
+
+/* 涂鸦下划线 */
+[data-theme-preset='neo-brutalism'] .nb-doodle-underline {
+  text-decoration: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 8'%3E%3Cpath d='M0,5 Q40,0 80,5 T160,5 T200,5' stroke='%23000' stroke-width='3' fill='none'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: bottom;
+  background-size: 200px 8px;
+  padding-bottom: 4px;
+}
+
+/* 噪点背景 */
+[data-theme-preset='neo-brutalism'] .nb-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* 条纹背景 */
+[data-theme-preset='neo-brutalism'] .nb-stripes {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    var(--muted) 10px,
+    var(--muted) 20px
+  );
 }

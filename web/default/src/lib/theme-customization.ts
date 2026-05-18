@@ -64,6 +64,11 @@ export const THEME_PRESETS = [
     name: 'Lavender Dream',
     swatches: ['oklch(0.5709 0.1808 306.89)', 'oklch(0.811 0.0589 201.14)'],
   },
+  {
+    value: 'neo-brutalism',
+    name: 'Neo-Brutalism',
+    swatches: ['oklch(0.65 0.25 350)', 'oklch(0.85 0.18 85)', 'oklch(0.65 0.2 250)'],
+  },
 ] as const
 
 export type ThemePreset = (typeof THEME_PRESETS)[number]['value']
