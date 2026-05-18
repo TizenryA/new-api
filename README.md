@@ -90,6 +90,26 @@
 - **ErrorBoundary 增强**：classic 主题的错误边界组件增加了详细的错误信息展示，便于移动端调试
 - **相关文件**：`web/classic/src/App.jsx`、`web/classic/vite.config.js`、`web/classic/src/components/common/ErrorBoundary.jsx`
 
+#### 5. 兑换码一码多用
+支持一个兑换码被多个用户使用，适用于群发兑换码场景。
+- **最大使用次数**：创建兑换码时可设置 `max_uses`（0=一码一用，>0=一码多用）
+- **使用记录**：关联表 `redemption_uses` 记录每个用户的使用情况，防止同一用户重复使用
+- **状态显示**：多用码部分使用显示为「Partially Used」，用完显示为「Used」
+- **管理功能**：管理员可查看兑换码的使用记录列表
+- **API**：`GET /api/redemption/:id/uses` 返回使用记录
+- **相关文件**：`model/redemption.go`、`model/redemption_use.go`、`controller/redemption.go`、`controller/redemption_use.go`
+
+#### 6. 用户排行榜
+展示用户 API 使用量排行榜，支持按时间段筛选。
+- **排行榜数据**：按消耗额度排序，显示用户 ID、用户名、请求数、Token 用量
+- **时间段筛选**：支持日、周、月、总四个时间段
+- **个人排名**：用户可查看自己的排名位置
+- **API**：
+  - `GET /api/user/ranking?period=all&limit=50` — 获取排行榜
+  - `GET /api/user/ranking/self?period=all` — 获取当前用户排名
+- **前端路由**：`/user-ranking`（需登录）
+- **相关文件**：`model/user_ranking.go`、`controller/ranking.go`、`web/default/src/features/user-ranking/`
+
 ---
 
 ## 📝 Project Description
