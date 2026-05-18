@@ -17,15 +17,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { UserRanking } from '@/features/user-ranking'
-import { useAuthStore } from '@/stores/auth-store'
 
+/** Redirect old /user-ranking to /rankings (user ranking is now merged). */
 export const Route = createFileRoute('/_authenticated/user-ranking')({
   beforeLoad: () => {
-    const { auth } = useAuthStore.getState()
-    if (!auth.user) {
-      throw redirect({ to: '/sign-in', search: { redirect: '/user-ranking' } })
-    }
+    throw redirect({ to: '/rankings' })
   },
-  component: UserRanking,
 })

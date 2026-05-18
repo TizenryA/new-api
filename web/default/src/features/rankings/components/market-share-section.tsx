@@ -28,7 +28,7 @@ import { formatShare, formatTokens } from '../lib/format'
 import type { RankingPeriod, VendorRanking, VendorShareSeries } from '../types'
 import { VendorLink } from './entity-links'
 
-const PERIOD_DESCRIPTIONS: Record<RankingPeriod, string> = {
+const PERIOD_DESCRIPTION_KEYS: Record<RankingPeriod, string> = {
   today: 'Token share by model author across the last 24 hours',
   week: 'Token share by model author across the past few weeks',
   month: 'Token share by model author across the past month',
@@ -218,7 +218,7 @@ export function MarketShareSection(props: MarketShareSectionProps) {
           {t('Market Share')}
         </h2>
         <p className='text-muted-foreground mt-1 text-sm'>
-          {t(PERIOD_DESCRIPTIONS[props.period])}
+            {t(PERIOD_DESCRIPTION_KEYS[props.period])}
         </p>
       </header>
 

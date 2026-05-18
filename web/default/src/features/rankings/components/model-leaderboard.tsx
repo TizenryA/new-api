@@ -66,15 +66,18 @@ function ModelList(props: {
 }) {
   const { t } = useTranslation()
   const compact = props.variant === 'compact'
+  // Max share for progress bar scaling (first row's share = 100% width)
+  const maxShare = props.rows.length > 0 ? props.rows[0].share : 1
   return (
     <ul>
       {props.rows.map((row) => (
         <li
           key={row.model_name}
+          data-rank={row.rank}
           className={
             compact
-              ? 'flex items-center gap-3 py-2'
-              : 'flex items-center gap-3 py-2.5'
+              ? 'flex items-center gap-3 py-2 rounded-md transition-colors'
+              : 'flex items-center gap-3 py-2.5 rounded-md transition-colors'
           }
         >
           <span className='text-muted-foreground/80 w-6 shrink-0 text-right font-mono text-xs tabular-nums'>
@@ -101,11 +104,21 @@ function ModelList(props: {
                   : 'text-muted-foreground/80 truncate text-xs italic'
               }
             >
-              by{' '}
+              {t('by')}{' '}
               <VendorLink vendor={row.vendor}>
                 {row.vendor.toLowerCase()}
               </VendorLink>
             </p>
+            {!compact && (
+              <div className='ranking-progress-track'>
+                <div
+                  className='ranking-progress-bar'
+                  style={{
+                    width: `${Math.max(2, (row.share / maxShare) * 100)}%`,
+                  }}
+                />
+              </div>
+            )}
           </div>
           <div className='shrink-0 text-right'>
             <div

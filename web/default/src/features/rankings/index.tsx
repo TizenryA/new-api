@@ -26,6 +26,7 @@ import {
   ModelsSection,
   PulseSection,
   RankingsHero,
+  UserRankingSection,
 } from './components'
 import { useRankings } from './hooks/use-rankings'
 import type { RankingPeriod } from './types'
@@ -102,6 +103,8 @@ export function Rankings() {
                 movers={snapshot.top_movers}
                 droppers={snapshot.top_droppers}
               />
+
+              <UserRankingSection period={period} />
             </>
           )}
         </PageTransition>

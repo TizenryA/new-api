@@ -28,7 +28,7 @@ import { formatTokens } from '../lib/format'
 import type { ModelHistorySeries, ModelRanking, RankingPeriod } from '../types'
 import { ModelLeaderboard } from './model-leaderboard'
 
-const PERIOD_DESCRIPTIONS: Record<RankingPeriod, string> = {
+const PERIOD_DESCRIPTION_KEYS: Record<RankingPeriod, string> = {
   today: 'Hourly token usage by model across the last 24 hours',
   week: 'Weekly token usage by model across the past few weeks',
   month: 'Daily token usage by model across the past month',
@@ -171,7 +171,7 @@ export function ModelsSection(props: ModelsSectionProps) {
             {t('Top Models')}
           </h2>
           <p className='text-muted-foreground mt-1 text-sm'>
-            {t(PERIOD_DESCRIPTIONS[props.period])}
+            {t(PERIOD_DESCRIPTION_KEYS[props.period])}
           </p>
         </div>
         <div className='shrink-0 text-right'>
