@@ -92,12 +92,26 @@ export function useRedemptionsColumns(): ColumnDef<Redemption>[] {
       cell: ({ row }) => {
         const redemption = row.original
         const statusValue = row.getValue('status') as number
+        const maxUses = redemption.max_uses || 0
+        const usedCount = redemption.used_count || 0
 
         // Check if expired
         if (isRedemptionExpired(redemption.expired_time, statusValue)) {
           return (
             <StatusBadge
               label={t('Expired')}
+              variant='warning'
+              showDot={true}
+              copyable={false}
+            />
+          )
+        }
+
+        // 一码多用且部分使用
+        if (maxUses > 0 && statusValue === REDEMPTION_STATUS.ENABLED && usedCount > 0) {
+          return (
+            <StatusBadge
+              label={t('Partially Used')}
               variant='warning'
               showDot={true}
               copyable={false}

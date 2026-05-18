@@ -22,6 +22,7 @@ import {
   Edit,
   Power,
   PowerOff,
+  List,
   MoreHorizontal as DotsHorizontalIcon,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -121,6 +122,17 @@ export function DataTableRowActions<TData>({
             )}
           </DropdownMenuItem>
         )}
+        <DropdownMenuItem
+          onClick={() => {
+            setCurrentRow(redemption)
+            setOpen('uses')
+          }}
+        >
+          {t('View Usage')}
+          <DropdownMenuShortcut>
+            <List size={16} />
+          </DropdownMenuShortcut>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => {

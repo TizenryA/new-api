@@ -94,3 +94,11 @@ export async function deleteInvalidRedemptions(): Promise<ApiResponse<number>> {
   const res = await api.delete('/api/redemption/invalid')
   return res.data
 }
+
+// Get redemption code usage records
+export async function getRedemptionUses(
+  id: number
+): Promise<ApiResponse<RedemptionUse[]>> {
+  const res = await api.get(`/api/redemption/${id}/uses`)
+  return res.data
+}

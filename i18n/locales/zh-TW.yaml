@@ -60,6 +60,8 @@ redemption.expired: "該兌換碼已過期"
 redemption.failed: "兌換失敗，請稍後重試"
 redemption.not_provided: "未提供兌換碼"
 redemption.expire_time_invalid: "過期時間不能早於當前時間"
+redemption.already_used_by_user: "您已使用過該兌換碼"
+redemption.invalid_max_uses: "最大使用次數必須為0或正整數"
 
 # User messages
 user.password_login_disabled: "管理員關閉了密碼登錄"

@@ -89,7 +89,7 @@ func AddRedemption(c *gin.Context) {
 	}
 	// 验证 max_uses
 	if redemption.MaxUses < 0 {
-		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		common.ApiErrorI18n(c, i18n.MsgRedemptionInvalidMaxUses)
 		return
 	}
 	var keys []string

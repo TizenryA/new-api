@@ -85,4 +85,16 @@ export interface RedemptionFormData {
 // Dialog Types
 // ============================================================================
 
-export type RedemptionsDialogType = 'create' | 'update' | 'delete' | 'view'
+export type RedemptionsDialogType = 'create' | 'update' | 'delete' | 'view' | 'uses'
+
+// ============================================================================
+// Redemption Use Record Types
+// ============================================================================
+
+export interface RedemptionUse {
+  id: number
+  redemption_id: number
+  user_id: number
+  quota: number
+  used_time: number
+}

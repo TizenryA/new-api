@@ -20,7 +20,14 @@ var (
 )
 
 // Redemption errors
-var ErrRedeemFailed = errors.New("redeem.failed")
+var (
+	ErrRedeemFailed           = errors.New("redeem.failed")
+	ErrRedemptionInvalid      = errors.New("redemption.invalid")
+	ErrRedemptionUsed         = errors.New("redemption.used")
+	ErrRedemptionExpired      = errors.New("redemption.expired")
+	ErrRedemptionAlreadyUsed  = errors.New("redemption.already_used_by_user")
+	ErrRedemptionInvalidUses  = errors.New("redemption.invalid_max_uses")
+)
 
 // 2FA errors
 var ErrTwoFANotEnabled = errors.New("2fa not enabled")

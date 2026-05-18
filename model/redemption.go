@@ -116,10 +116,10 @@ func GetRedemptionById(id int) (*Redemption, error) {
 
 func Redeem(key string, userId int) (quota int, err error) {
 	if key == "" {
-		return 0, errors.New("未提供兑换码")
+		return 0, ErrRedemptionInvalid
 	}
 	if userId == 0 {
-		return 0, errors.New("无效的 user id")
+		return 0, ErrRedemptionInvalid
 	}
 	redemption := &Redemption{}
 
@@ -131,13 +131,13 @@ func Redeem(key string, userId int) (quota int, err error) {
 	err = DB.Transaction(func(tx *gorm.DB) error {
 		err := tx.Set("gorm:query_option", "FOR UPDATE").Where(keyCol+" = ?", key).First(redemption).Error
 		if err != nil {
-			return errors.New("无效的兑换码")
+			return ErrRedemptionInvalid
 		}
 		if redemption.Status != common.RedemptionCodeStatusEnabled {
-			return errors.New("该兑换码已被使用")
+			return ErrRedemptionUsed
 		}
 		if redemption.ExpiredTime != 0 && redemption.ExpiredTime < common.GetTimestamp() {
-			return errors.New("该兑换码已过期")
+			return ErrRedemptionExpired
 		}
 
 		// 一码多用逻辑
@@ -149,7 +149,7 @@ func Redeem(key string, userId int) (quota int, err error) {
 				return err
 			}
 			if useCount > 0 {
-				return errors.New("您已使用过该兑换码")
+				return ErrRedemptionAlreadyUsed
 			}
 
 			// 增加使用次数
