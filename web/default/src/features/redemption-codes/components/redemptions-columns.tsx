@@ -261,6 +261,39 @@ export function useRedemptionsColumns(): ColumnDef<Redemption>[] {
       },
     },
     {
+      accessorKey: 'usage',
+      meta: { label: t('Usage'), mobileHidden: true },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('Usage')} />
+      ),
+      cell: ({ row }) => {
+        const redemption = row.original
+        const maxUses = redemption.max_uses || 0
+        const usedCount = redemption.used_count || 0
+
+        if (maxUses === 0) {
+          // 一码一用，显示已用/1
+          return (
+            <StatusBadge
+              label={`${usedCount}/1`}
+              variant={usedCount > 0 ? 'neutral' : 'success'}
+              copyable={false}
+            />
+          )
+        }
+
+        // 一码多用，显示已用/最大
+        const isFull = usedCount >= maxUses
+        return (
+          <StatusBadge
+            label={`${usedCount}/${maxUses}`}
+            variant={isFull ? 'neutral' : 'success'}
+            copyable={false}
+          />
+        )
+      },
+    },
+    {
       id: 'actions',
       cell: ({ row }) => <DataTableRowActions row={row} />,
     },

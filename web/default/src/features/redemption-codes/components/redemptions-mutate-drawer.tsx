@@ -221,6 +221,31 @@ export function RedemptionsMutateDrawer({
 
             <FormField
               control={form.control}
+              name='max_uses'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Max Uses')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type='number'
+                      min='0'
+                      placeholder={t('0 for single use, >0 for multi-use')}
+                      onChange={(e) =>
+                        field.onChange(parseInt(e.target.value, 10) || 0)
+                      }
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t('0 = single use (default), >0 = multi-use code')}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name='expired_time'
               render={({ field }) => (
                 <FormItem>
