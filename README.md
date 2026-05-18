@@ -100,15 +100,23 @@
 - **相关文件**：`model/redemption.go`、`model/redemption_use.go`、`controller/redemption.go`、`controller/redemption_use.go`
 
 #### 6. 用户排行榜
-展示用户 API 使用量排行榜，支持按时间段筛选。
-- **排行榜数据**：按消耗额度排序，显示用户 ID、用户名、请求数、Token 用量
-- **时间段筛选**：支持日、周、月、总四个时间段
-- **个人排名**：用户可查看自己的排名位置
+展示用户 API 使用量排行榜，已合并到公共排行榜页面（`/rankings`），不再需要单独登录访问。
+- **排行榜数据**：按消耗额度排序，显示用户名、请求数、Token 用量
+- **时间段筛选**：支持日、周、月、总四个时间段（复用排行榜页面顶部的 period 切换）
+- **进度条可视化**：每个用户下方显示用量占比进度条
+- **排名高亮**：前三名金色闪光动画，4-10 名骚粉色高亮
 - **API**：
   - `GET /api/user/ranking?period=all&limit=50` — 获取排行榜
   - `GET /api/user/ranking/self?period=all` — 获取当前用户排名
-- **前端路由**：`/user-ranking`（需登录）
-- **相关文件**：`model/user_ranking.go`、`controller/ranking.go`、`web/default/src/features/user-ranking/`
+- **前端路由**：`/rankings`（公共页面，无需登录）；旧路由 `/user-ranking` 自动跳转
+- **相关文件**：`model/user_ranking.go`、`controller/ranking.go`、`web/default/src/features/user-ranking/`、`web/default/src/features/rankings/components/user-ranking-section.tsx`
+
+#### 7. 排行榜增强（Neo-Brutalism 主题配套）
+对 default 前端排行榜页面的全面增强：
+- **i18n 补全**：模型排行榜、市场份额区域的时段描述和 `by` 文本改用 `t()` 翻译，不再硬编码英文
+- **排名高亮样式**：`ranking-highlight.css`，前三名金色渐变 + shimmer 动画，4-10 名 `#ff69b4` 高亮
+- **进度条可视化**：模型排行榜每行增加 token 占比进度条，按排名自动变色（金/粉/紫）
+- **相关文件**：`web/default/src/styles/ranking-highlight.css`、`web/default/src/features/rankings/components/model-leaderboard.tsx`
 
 ---
 
