@@ -1,0 +1,17 @@
+FROM debian:bookworm-slim
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates tzdata \
+    && rm -rf /var/lib/apt/lists/* \
+    && update-ca-certificates
+
+# Copy pre-built binary
+COPY new-api /new-api
+
+# Copy frontend
+COPY web/default/dist /web/default/dist
+RUN mkdir -p /web/classic/dist && echo "<!-- placeholder -->" > /web/classic/dist/index.html
+
+EXPOSE 3000
+WORKDIR /data
+ENTRYPOINT ["/new-api"]
