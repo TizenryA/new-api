@@ -119,6 +119,10 @@ func SetApiRouter(router *gin.Engine) {
 				// Custom OAuth bindings
 				selfRoute.GET("/oauth/bindings", controller.GetUserOAuthBindings)
 				selfRoute.DELETE("/oauth/bindings/:provider_id", controller.UnbindCustomOAuth)
+
+				// User ranking
+				selfRoute.GET("/ranking", controller.GetUserRanking)
+				selfRoute.GET("/ranking/self", controller.GetUserSelfRank)
 			}
 
 			adminRoute := userRoute.Group("/")

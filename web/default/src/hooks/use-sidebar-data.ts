@@ -98,6 +98,11 @@ export function useSidebarData(): SidebarData {
             configUrls: ['/usage-logs/drawing', '/usage-logs/task'],
             icon: ListTodo,
           },
+          {
+            title: t('User Ranking'),
+            url: '/user-ranking',
+            icon: Users,
+          },
         ],
       },
       {
