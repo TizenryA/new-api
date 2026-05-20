@@ -392,7 +392,7 @@ export function useCommonLogsColumns(isAdmin: boolean): ColumnDef<UsageLog>[] {
             </TooltipProvider>
           )
         },
-        meta: { label: t('Channel'), mobileHidden: true },
+        meta: { label: t('Channel') },
       }
     )
   }
@@ -492,7 +492,7 @@ export function useCommonLogsColumns(isAdmin: boolean): ColumnDef<UsageLog>[] {
           </TooltipProvider>
         )
       },
-      meta: { label: t('IP Address'), mobileHidden: true },
+      meta: { label: t('IP Address') },
     })
   }
 
@@ -698,7 +698,7 @@ export function useCommonLogsColumns(isAdmin: boolean): ColumnDef<UsageLog>[] {
           </div>
         )
       },
-      meta: { label: t('Timing'), mobileHidden: true },
+      meta: { label: t('Timing') },
     },
 
     {
@@ -749,7 +749,7 @@ export function useCommonLogsColumns(isAdmin: boolean): ColumnDef<UsageLog>[] {
           </div>
         )
       },
-      meta: { label: 'Tokens', mobileHidden: true },
+      meta: { label: 'Tokens' },
     },
 
     {
