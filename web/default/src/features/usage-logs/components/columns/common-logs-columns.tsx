@@ -460,7 +460,7 @@ export function useCommonLogsColumns(isAdmin: boolean): ColumnDef<UsageLog>[] {
         </button>
       )
     },
-    meta: { label: t('User'), mobileHidden: true },
+    meta: { label: t('User') },
   })
 
   if (isAdmin) {
