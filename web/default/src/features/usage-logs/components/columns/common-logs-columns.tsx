@@ -431,22 +431,29 @@ export function useCommonLogsColumns(isAdmin: boolean): ColumnDef<UsageLog>[] {
                   {sensitiveVisible ? getUserAvatarFallback(log.username) : '•'}
                 </AvatarFallback>
               </Avatar>
-              <TooltipProvider delay={300}>
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <span className='text-muted-foreground max-w-[100px] truncate text-sm hover:underline' />
-                    }
-                  >
-                    {sensitiveVisible ? log.username : '••••'}
-                  </TooltipTrigger>
-                  {sensitiveVisible && log.username.length > 12 && (
-                    <TooltipContent side='top'>
-                      {log.username}
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
+              <div className='flex min-w-0 flex-col'>
+                <TooltipProvider delay={300}>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <span className='text-muted-foreground max-w-[100px] truncate text-sm hover:underline' />
+                      }
+                    >
+                      {sensitiveVisible ? log.username : '••••'}
+                    </TooltipTrigger>
+                    {sensitiveVisible && log.username.length > 12 && (
+                      <TooltipContent side='top'>
+                        {log.username}
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+                {log.user_id > 0 && (
+                  <span className='text-muted-foreground/70 font-mono text-[10px]'>
+                    #{log.user_id}
+                  </span>
+                )}
+              </div>
             </button>
           )
         },
