@@ -118,6 +118,15 @@
 - **进度条可视化**：模型排行榜每行增加 token 占比进度条，按排名自动变色（金/粉/紫）
 - **相关文件**：`web/default/src/styles/ranking-highlight.css`、`web/default/src/features/rankings/components/model-leaderboard.tsx`
 
+#### 8. 使用日志表格优化
+对 default 前端的使用日志页面进行可用性和移动端适配改进：
+- **User 列全员可见**：User 列从仅管理员可见改为所有用户可见，普通用户也能在日志表格中看到自己的用户名和 ID
+- **管理员新增 IP 列**：管理员视图新增 IP 地址列，方便追踪请求来源
+- **详情弹窗 User 行**：日志详情弹窗新增 User 行，同时显示用户名和用户 ID
+- **移动端适配**：移除日志表格所有 `mobileHidden` 标记，手机端也能看到完整列信息；调色盘按钮在手机端可见
+- **路由修复**：更新 `routeTree.gen.ts` 正确注册 `/user-ranking` 路由
+- **相关文件**：`web/default/src/features/usage-logs/components/columns/common-logs-columns.tsx`、`web/default/src/features/usage-logs/components/dialogs/details-dialog.tsx`、`web/default/src/routeTree.gen.ts`
+
 ---
 
 ## 📝 Project Description
