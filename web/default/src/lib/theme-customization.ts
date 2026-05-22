@@ -69,6 +69,11 @@ export const THEME_PRESETS = [
     name: 'Neo-Brutalism',
     swatches: ['oklch(0.65 0.25 350)', 'oklch(0.85 0.18 85)', 'oklch(0.65 0.2 250)'],
   },
+  {
+    value: 'noir',
+    name: 'Noir',
+    swatches: ['oklch(0.62 0.15 350)', 'oklch(0.13 0.01 270)', 'oklch(0.58 0.12 250)'],
+  },
 ] as const
 
 export type ThemePreset = (typeof THEME_PRESETS)[number]['value']
