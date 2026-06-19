@@ -27,7 +27,6 @@ import {
   Cloud,
   Globe,
   ShieldCheck,
-  User,
   UserCog,
   Info,
   LogIn,
@@ -579,61 +578,16 @@ export function DetailsDialog(props: DetailsDialogProps) {
             />
           )}
 
-        <ScrollArea className='max-h-[70vh] min-w-0 overflow-hidden pr-2 max-sm:max-h-[calc(100dvh-7rem)] sm:pr-4'>
-          <div className='w-full max-w-full min-w-0 space-y-2.5 overflow-hidden py-1 sm:space-y-3'>
-            {/* Overview section - key identifiers */}
-            <div className='min-w-0 space-y-1'>
-              {props.log.request_id && (
-                <DetailRow
-                  label={t('Request ID')}
-                  value={props.log.request_id}
-                  mono
-                />
-              )}
-              {props.log.upstream_request_id && (
-                <DetailRow
-                  label={t('Upstream Request ID')}
-                  value={props.log.upstream_request_id}
-                  mono
-                />
-              )}
-
-              {(props.log.username || props.log.user_id > 0) && (
-                <DetailRow
-                  label={
-                    <span className='flex items-center gap-1.5'>
-                      <User
-                        className='text-muted-foreground size-3.5'
-                        aria-hidden='true'
-                      />
-                      {t('User')}
-                    </span>
-                  }
-                  value={
-                    <span className='flex items-center gap-1.5'>
-                      {props.log.username || '-'}
-                      {props.log.user_id > 0 && (
-                        <span className='text-muted-foreground font-mono text-[11px]'>
-                          #{props.log.user_id}
-                        </span>
-                      )}
-                    </span>
-                  }
-                />
-              )}
-
-              {props.isAdmin && props.log.channel > 0 && (
-                <DetailRow
-                  label={t('Channel')}
-                  value={
-                    <span>
-                      {props.log.channel}
-                      {props.log.channel_name && (
-                        <span className='text-muted-foreground'>
-                          {' '}
-                          ({props.log.channel_name})
-                        </span>
-                      )}
+          {props.isAdmin && props.log.channel > 0 && (
+            <DetailRow
+              label={t('Channel')}
+              value={
+                <span>
+                  {props.log.channel}
+                  {props.log.channel_name && (
+                    <span className='text-muted-foreground'>
+                      {' '}
+                      ({props.log.channel_name})
                     </span>
                   )}
                 </span>

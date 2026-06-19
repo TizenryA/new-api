@@ -27,7 +27,8 @@ import {
 } from '@/components/ui/tooltip'
 import { MaskedValueDisplay } from '@/components/masked-value-display'
 import { StatusBadge } from '@/components/status-badge'
-import { REDEMPTION_FILTER_EXPIRED, REDEMPTION_STATUS, REDEMPTION_STATUSES } from '../constants'
+import { TableId } from '@/components/table-id'
+import { REDEMPTION_FILTER_EXPIRED, REDEMPTION_STATUSES } from '../constants'
 import { isRedemptionExpired, isTimestampExpired } from '../lib'
 import { type Redemption } from '../types'
 import { DataTableRowActions } from './data-table-row-actions'
@@ -85,8 +86,6 @@ export function useRedemptionsColumns(): ColumnDef<Redemption>[] {
       cell: ({ row }) => {
         const redemption = row.original
         const statusValue = row.getValue('status') as number
-        const maxUses = redemption.max_uses || 0
-        const usedCount = redemption.used_count || 0
 
         // Check if expired
         if (isRedemptionExpired(redemption.expired_time, statusValue)) {
@@ -96,18 +95,6 @@ export function useRedemptionsColumns(): ColumnDef<Redemption>[] {
               variant='warning'
               copyable={false}
               className='-ml-1.5'
-            />
-          )
-        }
-
-        // 一码多用且部分使用
-        if (maxUses > 0 && statusValue === REDEMPTION_STATUS.ENABLED && usedCount > 0) {
-          return (
-            <StatusBadge
-              label={t('Partially Used')}
-              variant='warning'
-              showDot={true}
-              copyable={false}
             />
           )
         }
@@ -262,39 +249,6 @@ export function useRedemptionsColumns(): ColumnDef<Redemption>[] {
         )
       },
       size: 140,
-    },
-    {
-      accessorKey: 'usage',
-      meta: { label: t('Usage'), mobileHidden: true },
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('Usage')} />
-      ),
-      cell: ({ row }) => {
-        const redemption = row.original
-        const maxUses = redemption.max_uses || 0
-        const usedCount = redemption.used_count || 0
-
-        if (maxUses === 0) {
-          // 一码一用，显示已用/1
-          return (
-            <StatusBadge
-              label={`${usedCount}/1`}
-              variant={usedCount > 0 ? 'neutral' : 'success'}
-              copyable={false}
-            />
-          )
-        }
-
-        // 一码多用，显示已用/最大
-        const isFull = usedCount >= maxUses
-        return (
-          <StatusBadge
-            label={`${usedCount}/${maxUses}`}
-            variant={isFull ? 'neutral' : 'success'}
-            copyable={false}
-          />
-        )
-      },
     },
     {
       id: 'actions',
