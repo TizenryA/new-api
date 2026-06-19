@@ -127,6 +127,15 @@
 - **路由修复**：更新 `routeTree.gen.ts` 正确注册 `/user-ranking` 路由
 - **相关文件**：`web/default/src/features/usage-logs/components/columns/common-logs-columns.tsx`、`web/default/src/features/usage-logs/components/dialogs/details-dialog.tsx`、`web/default/src/routeTree.gen.ts`
 
+#### 9. 拟物风格主题（Skeuomorphic）
+新增「Skeuomorphic」拟物化主题，用数字界面模拟现实世界的材质和结构：
+- **设计理念**：金属面板 + 皮革质感 + 黄铜按钮 + 木纹底座，灵感来自录音棚调音台、老式控制室和精密仪器仪表盘
+- **色彩语言**：深色金属面板底色（`oklch(0.215 0.012 55)`）+ 黄铜主色（`oklch(0.72 0.145 55)`）+ 皮革棕副色（`oklch(0.42 0.065 45)`）
+- **仪表配色**：黄铜、仪表绿、琥珀金、胡桃木、冷钢蓝五色图表色板
+- **圆角策略**：`0.375rem` 硬朗边缘，呼应精密仪器的物理感
+- **适配范围**：亮色/暗色双模式，所有 shadcn 组件 token 全覆盖（含 sidebar、skeleton、semantic tokens）
+- **相关文件**：`web/default/src/styles/theme-presets.css`、`web/default/src/lib/theme-customization.ts`、`web/default/src/i18n/locales/{en,zh}.json`
+
 ---
 
 ## 📝 Project Description

@@ -420,7 +420,8 @@ For commercial licensing, please contact support@quantumnous.com
  *   - `simple-large`: keeps intentionally neutral, high-contrast surfaces. */
 [data-theme-preset]:not([data-theme-preset='default']):not(
     [data-theme-preset='anthropic']
-  ):not([data-theme-preset='simple-large']) {
+  ):not([data-theme-preset='simple-large']
+  ):not([data-theme-preset='skeuomorphic']) {
   --card: color-mix(in oklch, var(--primary) 3%, var(--background));
   --popover: color-mix(in oklch, var(--primary) 5%, var(--background));
   --muted: color-mix(in oklch, var(--primary) 7%, var(--background));
@@ -445,7 +446,8 @@ For commercial licensing, please contact support@quantumnous.com
 .dark
   [data-theme-preset]:not([data-theme-preset='default']):not(
     [data-theme-preset='anthropic']
-  ):not([data-theme-preset='simple-large']) {
+  ):not([data-theme-preset='simple-large']
+  ):not([data-theme-preset='skeuomorphic']) {
   --card: color-mix(in oklch, var(--primary) 8%, var(--background));
   --popover: color-mix(in oklch, var(--primary) 12%, var(--background));
   --muted: color-mix(in oklch, var(--primary) 12%, var(--background));
@@ -730,6 +732,136 @@ For commercial licensing, please contact support@quantumnous.com
     margin-inline: auto;
     width: 100%;
   }
+}
+
+/* ── Skeuomorphic ──────────────────────────────────────────────────── */
+/* 拟物化风格：金属面板 + 皮革质感 + 黄铜按钮 + 木纹底座
+ * 灵感来自录音棚调音台、老式控制室和精密仪器仪表盘。
+ * 用数字界面模拟现实世界的材质和结构，营造「在操作真实设备」的氛围。 */
+[data-theme-preset='skeuomorphic'] {
+  /* 深色金属面板底色 */
+  --background: oklch(0.215 0.012 55);
+  --foreground: oklch(0.93 0.01 75);
+
+  /* 器物面板 — 像金属凹槽里的嵌板 */
+  --card: oklch(0.255 0.015 52);
+  --card-foreground: oklch(0.93 0.01 75);
+  --popover: oklch(0.275 0.016 50);
+  --popover-foreground: oklch(0.93 0.01 75);
+
+  /* 黄铜主色 — 像抛光铜件上的暖光 */
+  --primary: oklch(0.72 0.145 55);
+  --primary-foreground: oklch(0.15 0.015 50);
+
+  /* 皮革棕 — 深沉温润的握持感 */
+  --secondary: oklch(0.42 0.065 45);
+  --secondary-foreground: oklch(0.92 0.008 70);
+
+  /* 暗灰绿 — 仪表盘上的非活跃区域 */
+  --muted: oklch(0.30 0.012 55);
+  --muted-foreground: oklch(0.68 0.015 65);
+
+  /* 古铜高光 — 旋钮边缘的光泽 */
+  --accent: oklch(0.38 0.045 55);
+  --accent-foreground: oklch(0.95 0.008 75);
+
+  /* 红色警示灯 */
+  --destructive: oklch(0.62 0.2 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  /* 绿色指示灯 */
+  --success: oklch(0.55 0.12 148);
+  --success-foreground: oklch(0.98 0 0);
+  /* 琥珀色警告灯 */
+  --warning: oklch(0.75 0.16 65);
+  --warning-foreground: oklch(0.18 0.015 50);
+  /* 冷蓝信息灯 — 科技感点缀 */
+  --info: oklch(0.58 0.12 245);
+  --info-foreground: oklch(0.98 0 0);
+  --neutral: oklch(0.55 0.015 60);
+  --neutral-foreground: oklch(0.18 0.015 50);
+
+  /* 金属边缘 — 像面板接缝的暗线 */
+  --border: oklch(0.34 0.018 52);
+  --input: oklch(0.32 0.016 52);
+  --ring: oklch(0.72 0.145 55);
+
+  /* 仪表配色 — 铜、皮革、金、木、冷钢 */
+  --chart-1: oklch(0.72 0.145 55);  /* 黄铜 */
+  --chart-2: oklch(0.55 0.12 148);  /* 仪表绿 */
+  --chart-3: oklch(0.78 0.13 80);   /* 琥珀金 */
+  --chart-4: oklch(0.48 0.07 35);   /* 胡桃木 */
+  --chart-5: oklch(0.62 0.06 245);  /* 冷钢蓝 */
+
+  /* 侧边栏 — 比主面板略深，像控制台左侧的暗区 */
+  --sidebar: oklch(0.195 0.01 55);
+  --sidebar-foreground: oklch(0.88 0.012 70);
+  --sidebar-primary: oklch(0.72 0.145 55);
+  --sidebar-primary-foreground: oklch(0.15 0.015 50);
+  --sidebar-accent: oklch(0.32 0.025 52);
+  --sidebar-accent-foreground: oklch(0.92 0.008 75);
+  --sidebar-border: oklch(0.30 0.015 52);
+  --sidebar-ring: oklch(0.72 0.145 55);
+
+  --skeleton-base: oklch(0.28 0.014 52);
+  --skeleton-highlight: oklch(0.34 0.016 52);
+
+  /* 圆角偏小 — 精密仪器的硬朗边缘 */
+  --radius: 0.375rem;
+}
+.dark [data-theme-preset='skeuomorphic'] {
+  /* 深色模式沿用暗金属面板，仅微调对比度 */
+  --background: oklch(0.18 0.01 55);
+  --foreground: oklch(0.94 0.008 75);
+
+  --card: oklch(0.22 0.013 52);
+  --card-foreground: oklch(0.94 0.008 75);
+  --popover: oklch(0.24 0.014 50);
+  --popover-foreground: oklch(0.94 0.008 75);
+
+  --primary: oklch(0.76 0.15 55);
+  --primary-foreground: oklch(0.12 0.015 50);
+
+  --secondary: oklch(0.46 0.07 45);
+  --secondary-foreground: oklch(0.94 0.008 70);
+
+  --muted: oklch(0.27 0.012 55);
+  --muted-foreground: oklch(0.72 0.012 65);
+
+  --accent: oklch(0.35 0.04 55);
+  --accent-foreground: oklch(0.96 0.006 75);
+
+  --destructive: oklch(0.66 0.2 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --success: oklch(0.6 0.13 148);
+  --success-foreground: oklch(0.12 0.015 50);
+  --warning: oklch(0.78 0.16 65);
+  --warning-foreground: oklch(0.15 0.015 50);
+  --info: oklch(0.62 0.12 245);
+  --info-foreground: oklch(0.12 0.015 50);
+  --neutral: oklch(0.6 0.012 60);
+  --neutral-foreground: oklch(0.15 0.015 50);
+
+  --border: oklch(0.30 0.016 52);
+  --input: oklch(0.28 0.014 52);
+  --ring: oklch(0.76 0.15 55);
+
+  --chart-1: oklch(0.76 0.15 55);
+  --chart-2: oklch(0.6 0.13 148);
+  --chart-3: oklch(0.82 0.13 80);
+  --chart-4: oklch(0.52 0.07 35);
+  --chart-5: oklch(0.66 0.06 245);
+
+  --sidebar: oklch(0.165 0.008 55);
+  --sidebar-foreground: oklch(0.90 0.01 70);
+  --sidebar-primary: oklch(0.76 0.15 55);
+  --sidebar-primary-foreground: oklch(0.12 0.015 50);
+  --sidebar-accent: oklch(0.30 0.022 52);
+  --sidebar-accent-foreground: oklch(0.94 0.008 75);
+  --sidebar-border: oklch(0.28 0.014 52);
+  --sidebar-ring: oklch(0.76 0.15 55);
+
+  --skeleton-base: oklch(0.25 0.012 52);
+  --skeleton-highlight: oklch(0.30 0.014 52);
 }
 
 /* ── Neo-Brutalism ──────────────────────────────────────────────────── */

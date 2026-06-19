@@ -78,6 +78,11 @@ export const THEME_PRESETS = [
     swatches: ['oklch(0.5709 0.1808 306.89)', 'oklch(0.811 0.0589 201.14)'],
   },
   {
+    value: 'skeuomorphic',
+    name: 'Skeuomorphic',
+    swatches: ['oklch(0.72 0.145 55)', 'oklch(0.42 0.065 45)', 'oklch(0.78 0.13 80)'],
+  },
+  {
     value: 'neo-brutalism',
     name: 'Neo-Brutalism',
     swatches: ['oklch(0.65 0.25 350)', 'oklch(0.85 0.18 85)', 'oklch(0.65 0.2 250)'],
