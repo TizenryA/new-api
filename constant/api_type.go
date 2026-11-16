@@ -37,5 +37,10 @@ const (
 	APITypeReplicate
 	APITypeCodex
 	APITypeAdvancedCustom
+	APITypeSub2API
+	APITypeNewAPI
+	// APITypeProviderPlugin serves a task plugin channel (type 61) whose
+	// plugin has relay routes; ChannelType2APIType never returns it.
+	APITypeProviderPlugin
 	APITypeDummy // this one is only for count, do not add any channel after this
 )

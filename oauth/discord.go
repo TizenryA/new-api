@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/QuantumNous/new-api/i18n"
+	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/setting/system_setting"
@@ -53,10 +53,8 @@ func (p *DiscordProvider) IsEnabled() bool {
 
 func (p *DiscordProvider) ExchangeToken(ctx context.Context, code string, c *gin.Context) (*OAuthToken, error) {
 	if code == "" {
-		return nil, NewOAuthError(i18n.MsgOAuthInvalidCode, nil)
+		return nil, NewOAuthError(common.NewMessage(msgInvalidCode))
 	}
-
-	logger.LogDebug(ctx, "[OAuth-Discord] ExchangeToken: code=%s...", code[:min(len(code), 10)])
 
 	settings := system_setting.GetDiscordSettings()
 	redirectUri := fmt.Sprintf("%s/oauth/discord", system_setting.ServerAddress)
@@ -81,8 +79,8 @@ func (p *DiscordProvider) ExchangeToken(ctx context.Context, code string, c *gin
 	}
 	res, err := client.Do(req)
 	if err != nil {
-		logger.LogError(ctx, fmt.Sprintf("[OAuth-Discord] ExchangeToken error: %s", err.Error()))
-		return nil, NewOAuthErrorWithRaw(i18n.MsgOAuthConnectFailed, map[string]any{"Provider": "Discord"}, err.Error())
+		logger.LogError(ctx, common.LogText("[OAuth-Discord] ExchangeToken error: %s", err.Error()))
+		return nil, NewOAuthErrorWithRaw(common.NewMessage(msgConnectFailed, map[string]any{"provider": "Discord"}), err.Error())
 	}
 	defer res.Body.Close()
 
@@ -92,13 +90,13 @@ func (p *DiscordProvider) ExchangeToken(ctx context.Context, code string, c *gin
 
 	err = json.NewDecoder(res.Body).Decode(&discordResponse)
 	if err != nil {
-		logger.LogError(ctx, fmt.Sprintf("[OAuth-Discord] ExchangeToken decode error: %s", err.Error()))
+		logger.LogError(ctx, common.LogText("[OAuth-Discord] ExchangeToken decode error: %s", err.Error()))
 		return nil, err
 	}
 
 	if discordResponse.AccessToken == "" {
-		logger.LogError(ctx, "[OAuth-Discord] ExchangeToken failed: empty access token")
-		return nil, NewOAuthError(i18n.MsgOAuthTokenFailed, map[string]any{"Provider": "Discord"})
+		logger.LogError(ctx, common.LogText("[OAuth-Discord] ExchangeToken failed: empty access token"))
+		return nil, NewOAuthError(common.NewMessage(msgTokenFailed, map[string]any{"provider": "Discord"}))
 	}
 
 	logger.LogDebug(ctx, "[OAuth-Discord] ExchangeToken success: scope=%s", discordResponse.Scope)
@@ -127,28 +125,28 @@ func (p *DiscordProvider) GetUserInfo(ctx context.Context, token *OAuthToken) (*
 	}
 	res, err := client.Do(req)
 	if err != nil {
-		logger.LogError(ctx, fmt.Sprintf("[OAuth-Discord] GetUserInfo error: %s", err.Error()))
-		return nil, NewOAuthErrorWithRaw(i18n.MsgOAuthConnectFailed, map[string]any{"Provider": "Discord"}, err.Error())
+		logger.LogError(ctx, common.LogText("[OAuth-Discord] GetUserInfo error: %s", err.Error()))
+		return nil, NewOAuthErrorWithRaw(common.NewMessage(msgConnectFailed, map[string]any{"provider": "Discord"}), err.Error())
 	}
 	defer res.Body.Close()
 
 	logger.LogDebug(ctx, "[OAuth-Discord] GetUserInfo response status: %d", res.StatusCode)
 
 	if res.StatusCode != http.StatusOK {
-		logger.LogError(ctx, fmt.Sprintf("[OAuth-Discord] GetUserInfo failed: status=%d", res.StatusCode))
-		return nil, NewOAuthError(i18n.MsgOAuthGetUserErr, nil)
+		logger.LogError(ctx, common.LogText("[OAuth-Discord] GetUserInfo failed: status=%d", res.StatusCode))
+		return nil, NewOAuthError(common.NewMessage(msgGetUserFailed))
 	}
 
 	var discordUser discordUser
 	err = json.NewDecoder(res.Body).Decode(&discordUser)
 	if err != nil {
-		logger.LogError(ctx, fmt.Sprintf("[OAuth-Discord] GetUserInfo decode error: %s", err.Error()))
+		logger.LogError(ctx, common.LogText("[OAuth-Discord] GetUserInfo decode error: %s", err.Error()))
 		return nil, err
 	}
 
 	if discordUser.UID == "" || discordUser.ID == "" {
-		logger.LogError(ctx, "[OAuth-Discord] GetUserInfo failed: empty user fields")
-		return nil, NewOAuthError(i18n.MsgOAuthUserInfoEmpty, map[string]any{"Provider": "Discord"})
+		logger.LogError(ctx, common.LogText("[OAuth-Discord] GetUserInfo failed: empty user fields"))
+		return nil, NewOAuthError(common.NewMessage(msgUserInfoEmpty, map[string]any{"provider": "Discord"}))
 	}
 
 	// 黑名单检查（必须不在黑名单服务器）
@@ -186,6 +184,11 @@ func (p *DiscordProvider) GetProviderPrefix() string {
 	return "discord_"
 }
 
+// ProviderUserIDColumn returns the users-table column storing this provider's user ID.
+func (p *DiscordProvider) ProviderUserIDColumn() string {
+	return "discord_id"
+}
+
 // ============================================================================
 // Discord Guild Validation (whitelist + blacklist)
 // ============================================================================
@@ -220,11 +223,11 @@ func validateDiscordGuildBan(ctx context.Context, accessToken string) error {
 	for guildID := range bannedGuildIDs {
 		inGuild, err := isUserInGuild(ctx, accessToken, guildID)
 		if err != nil {
-			logger.LogError(ctx, fmt.Sprintf("[OAuth-Discord] Banned guild check error: guild=%s err=%s", guildID, err.Error()))
+			logger.LogError(ctx, common.LogText("[OAuth-Discord] Banned guild check error: guild=%s err=%s", guildID, err.Error()))
 			continue // 网络错误时不阻断，继续检查
 		}
 		if inGuild {
-			logger.LogError(ctx, fmt.Sprintf("[OAuth-Discord] User is in banned guild: %s", guildID))
+			logger.LogError(ctx, common.LogText("[OAuth-Discord] User is in banned guild: %s", guildID))
 			return &AccessDeniedError{Message: "该账号无法登录，请联系管理员了解详情"}
 		}
 	}
@@ -253,19 +256,19 @@ func validateDiscordGuildMembership(ctx context.Context, accessToken string) err
 	client := http.Client{Timeout: 5 * time.Second}
 	res, err := client.Do(req)
 	if err != nil {
-		logger.LogError(ctx, fmt.Sprintf("[OAuth-Discord] Guild membership validation error: %s", err.Error()))
-		return NewOAuthErrorWithRaw(i18n.MsgOAuthConnectFailed, map[string]any{"Provider": "Discord"}, err.Error())
+		logger.LogError(ctx, common.LogText("[OAuth-Discord] Guild membership validation error: %s", err.Error()))
+		return NewOAuthErrorWithRaw(common.NewMessage(msgConnectFailed, map[string]any{"provider": "Discord"}), err.Error())
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		logger.LogError(ctx, fmt.Sprintf("[OAuth-Discord] Guild membership validation failed: guild=%s status=%d", guildID, res.StatusCode))
+		logger.LogError(ctx, common.LogText("[OAuth-Discord] Guild membership validation failed: guild=%s status=%d", guildID, res.StatusCode))
 		return &AccessDeniedError{Message: "该账号未加入指定 Discord 社区，无法登录"}
 	}
 
 	var member discordGuildMember
-	if err := json.NewDecoder(res.Body).Decode(&member); err != nil {
-		logger.LogError(ctx, fmt.Sprintf("[OAuth-Discord] Guild membership decode error: %s", err.Error()))
+	if err := common.DecodeJson(res.Body, &member); err != nil {
+		logger.LogError(ctx, common.LogText("[OAuth-Discord] Guild membership decode error: %s", err.Error()))
 		return err
 	}
 
@@ -279,7 +282,7 @@ func validateDiscordGuildMembership(ctx context.Context, accessToken string) err
 		return nil
 	}
 
-	logger.LogError(ctx, fmt.Sprintf("[OAuth-Discord] Guild role validation failed: guild=%s user_role_count=%d", guildID, len(member.Roles)))
+	logger.LogError(ctx, common.LogText("[OAuth-Discord] Guild role validation failed: guild=%s user_role_count=%d", guildID, len(member.Roles)))
 	return &AccessDeniedError{Message: "该账号未获得允许登录的 Discord 身份组，无法登录"}
 }
 
