@@ -9,15 +9,16 @@ import (
 	"strings"
 
 	"github.com/QuantumNous/new-api/constant"
-	"github.com/QuantumNous/new-api/dto"
 	"github.com/QuantumNous/new-api/relay/channel"
 	"github.com/QuantumNous/new-api/relay/channel/claude"
 	"github.com/QuantumNous/new-api/relay/channel/gemini"
 	"github.com/QuantumNous/new-api/relay/channel/openai"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	relayconstant "github.com/QuantumNous/new-api/relay/constant"
+	"github.com/QuantumNous/new-api/relaykit/dto"
+	"github.com/QuantumNous/new-api/relaykit/relayconvert"
+	"github.com/QuantumNous/new-api/relaykit/types"
 	"github.com/QuantumNous/new-api/service"
-	"github.com/QuantumNous/new-api/types"
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
 )
@@ -35,6 +36,11 @@ type Adaptor struct {
 	converted bool
 	route     dto.AdvancedCustomRoute
 	converter string
+	// upstreamPath is the path a provider plugin chose for the request, in
+	// place of the route's upstream_path, and upstreamURL the whole address
+	// it chose instead.
+	upstreamPath string
+	upstreamURL  string
 }
 
 func (a *Adaptor) Init(info *relaycommon.RelayInfo) {
@@ -48,20 +54,19 @@ func (a *Adaptor) ConvertOpenAIRequest(c *gin.Context, info *relaycommon.RelayIn
 	if err != nil {
 		return nil, err
 	}
-	if converter == dto.AdvancedCustomConverterNone {
+	if converter == relayconvert.ConverterNone {
 		return a.convertOpenAICompatibleRequest(c, info, request)
 	}
 
 	switch converter {
-	case dto.AdvancedCustomConverterOpenAIChatCompletionsToAnthropicMessages:
-		return a.claudeAdaptor.ConvertOpenAIRequest(c, info, request)
-	case dto.AdvancedCustomConverterOpenAIChatCompletionsToOpenAIResponses:
-		if request == nil {
-			return nil, errors.New("request is nil")
+	case relayconvert.ConverterOpenAIChatToClaudeMessages,
+		relayconvert.ConverterOpenAIChatToOpenAIResponses,
+		relayconvert.ConverterOpenAIChatToGeminiContent:
+		result, err := service.ConvertRequestByID(c, info, converter, request)
+		if err != nil {
+			return nil, err
 		}
-		return service.ChatCompletionsRequestToResponsesRequest(request)
-	case dto.AdvancedCustomConverterOpenAIChatCompletionsToGeminiGenerateContent:
-		return a.geminiAdaptor.ConvertOpenAIRequest(c, info, request)
+		return result.Value, nil
 	default:
 		return nil, fmt.Errorf("converter %q does not support OpenAI chat completions requests", converter)
 	}
@@ -74,10 +79,12 @@ func (a *Adaptor) ConvertClaudeRequest(c *gin.Context, info *relaycommon.RelayIn
 	}
 
 	switch converter {
-	case dto.AdvancedCustomConverterNone:
+	case relayconvert.ConverterNone:
 		return a.claudeAdaptor.ConvertClaudeRequest(c, info, request)
-	case dto.AdvancedCustomConverterAnthropicMessagesToOpenAIChatCompletions:
-		return a.convertClaudeToOpenAICompatibleRequest(c, info, request)
+	case relayconvert.ConverterClaudeMessagesToOpenAIChat:
+		return a.convertCrossProtocolChatRequest(c, info, converter, request)
+	case relayconvert.ConverterClaudeMessagesToOpenAIResponses:
+		return convertCrossProtocolResponsesRequest(c, info, converter, request)
 	default:
 		return nil, fmt.Errorf("converter %q does not support Anthropic Messages requests", converter)
 	}
@@ -90,10 +97,12 @@ func (a *Adaptor) ConvertGeminiRequest(c *gin.Context, info *relaycommon.RelayIn
 	}
 
 	switch converter {
-	case dto.AdvancedCustomConverterNone:
+	case relayconvert.ConverterNone:
 		return a.geminiAdaptor.ConvertGeminiRequest(c, info, request)
-	case dto.AdvancedCustomConverterGeminiGenerateContentToOpenAIChatCompletions:
-		return a.convertGeminiToOpenAICompatibleRequest(c, info, request)
+	case relayconvert.ConverterGeminiContentToOpenAIChat:
+		return a.convertCrossProtocolChatRequest(c, info, converter, request)
+	case relayconvert.ConverterGeminiContentToOpenAIResponses:
+		return convertCrossProtocolResponsesRequest(c, info, converter, request)
 	default:
 		return nil, fmt.Errorf("converter %q does not support Gemini generateContent requests", converter)
 	}
@@ -104,10 +113,24 @@ func (a *Adaptor) ConvertOpenAIResponsesRequest(c *gin.Context, info *relaycommo
 	if err != nil {
 		return nil, err
 	}
-	if converter != dto.AdvancedCustomConverterNone {
+	switch converter {
+	case relayconvert.ConverterNone:
+		return a.convertOpenAICompatibleResponsesRequest(c, info, request)
+	case relayconvert.ConverterOpenAIResponsesToOpenAIChat:
+		return a.convertCrossProtocolChatRequest(c, info, converter, request)
+	case relayconvert.ConverterOpenAIResponsesToGemini:
+		result, err := service.ConvertRequestByID(c, info, converter, request)
+		if err != nil {
+			return nil, err
+		}
+		geminiRequest, ok := result.Value.(*dto.GeminiChatRequest)
+		if !ok {
+			return nil, fmt.Errorf("expected Gemini generateContent request, got %T", result.Value)
+		}
+		return geminiRequest, nil
+	default:
 		return nil, fmt.Errorf("converter %q does not support OpenAI Responses requests", converter)
 	}
-	return a.convertOpenAICompatibleResponsesRequest(c, info, request)
 }
 
 func (a *Adaptor) ConvertEmbeddingRequest(c *gin.Context, info *relaycommon.RelayInfo, request dto.EmbeddingRequest) (any, error) {
@@ -115,7 +138,7 @@ func (a *Adaptor) ConvertEmbeddingRequest(c *gin.Context, info *relaycommon.Rela
 	if err != nil {
 		return nil, err
 	}
-	if converter != dto.AdvancedCustomConverterNone {
+	if converter != relayconvert.ConverterNone {
 		return nil, fmt.Errorf("converter %q does not support embedding requests", converter)
 	}
 	return a.convertOpenAICompatibleEmbeddingRequest(c, info, request)
@@ -126,7 +149,7 @@ func (a *Adaptor) ConvertAudioRequest(c *gin.Context, info *relaycommon.RelayInf
 	if err != nil {
 		return nil, err
 	}
-	if converter != dto.AdvancedCustomConverterNone {
+	if converter != relayconvert.ConverterNone {
 		return nil, fmt.Errorf("converter %q does not support audio requests", converter)
 	}
 	return a.convertOpenAICompatibleAudioRequest(c, info, request)
@@ -137,7 +160,7 @@ func (a *Adaptor) ConvertImageRequest(c *gin.Context, info *relaycommon.RelayInf
 	if err != nil {
 		return nil, err
 	}
-	if converter != dto.AdvancedCustomConverterNone {
+	if converter != relayconvert.ConverterNone {
 		return nil, fmt.Errorf("converter %q does not support image requests", converter)
 	}
 	return a.convertOpenAICompatibleImageRequest(c, info, request)
@@ -153,6 +176,82 @@ func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 		return "", err
 	}
 	return a.routeURL(info)
+}
+
+// UseUpstreamPath sends the request to path, a path a provider plugin chose,
+// in place of the route's upstream_path. The caller has checked that it
+// starts with a single /.
+func (a *Adaptor) UseUpstreamPath(path string) {
+	a.upstreamPath, a.upstreamURL = path, ""
+}
+
+// UseUpstreamURL sends the request to target, an absolute http(s) address a
+// provider plugin chose, in place of the route's; the route auth query still
+// applies. An empty target keeps the route's address.
+func (a *Adaptor) UseUpstreamURL(target string) {
+	a.upstreamPath, a.upstreamURL = "", target
+}
+
+func (a *Adaptor) BuildModelListRequest(info *relaycommon.RelayInfo) (string, http.Header, error) {
+	return a.buildManagementRequest(info, dto.AdvancedCustomModelListPath)
+}
+
+func (a *Adaptor) BuildBalanceRequest(info *relaycommon.RelayInfo) (string, http.Header, error) {
+	return a.buildManagementRequest(info, dto.AdvancedCustomBalancePath)
+}
+
+func (a *Adaptor) buildManagementRequest(info *relaycommon.RelayInfo, managementPath string) (string, http.Header, error) {
+	if info == nil {
+		return "", nil, errors.New("missing relay info")
+	}
+	config := info.ChannelOtherSettings.AdvancedCustom
+	if config == nil {
+		return "", nil, errors.New("advanced_custom is required")
+	}
+	if err := config.Validate(); err != nil {
+		return "", nil, err
+	}
+	var route dto.AdvancedCustomRoute
+	var ok bool
+	switch managementPath {
+	case dto.AdvancedCustomModelListPath:
+		route, ok = config.ModelListRoute()
+	case dto.AdvancedCustomBalancePath:
+		route, ok = config.BalanceRoute()
+	default:
+		return "", nil, fmt.Errorf("unsupported advanced custom management path: %s", managementPath)
+	}
+	if !ok {
+		return "", nil, fmt.Errorf("advanced custom channel does not configure a %s route", managementPath)
+	}
+	converter := strings.TrimSpace(route.Converter)
+	if converter == "" {
+		converter = relayconvert.ConverterNone
+	}
+	if converter != relayconvert.ConverterNone {
+		return "", nil, fmt.Errorf("converter %q does not support %s requests", converter, managementPath)
+	}
+
+	requestURL, err := buildRouteURL(route, converter, info, a.upstreamPath, a.upstreamURL)
+	if err != nil {
+		return "", nil, err
+	}
+
+	header := http.Header{}
+	auth := route.Auth
+	if auth == nil {
+		header.Set("Authorization", "Bearer "+info.ApiKey)
+		return requestURL, header, nil
+	}
+
+	switch strings.TrimSpace(auth.Type) {
+	case dto.AdvancedCustomAuthTypeNone, dto.AdvancedCustomAuthTypeQuery:
+	case dto.AdvancedCustomAuthTypeHeader:
+		header.Set(strings.TrimSpace(auth.Name), applyAuthTemplate(auth.Value, info.ApiKey))
+	default:
+		return "", nil, fmt.Errorf("invalid advanced custom auth type: %s", auth.Type)
+	}
+	return requestURL, header, nil
 }
 
 func (a *Adaptor) SetupRequestHeader(c *gin.Context, header *http.Header, info *relaycommon.RelayInfo) error {
@@ -183,22 +282,34 @@ func (a *Adaptor) SetupRequestHeader(c *gin.Context, header *http.Header, info *
 }
 
 func (a *Adaptor) DoRequest(c *gin.Context, info *relaycommon.RelayInfo, requestBody io.Reader) (any, error) {
+	return a.DoRequestWith(a, c, info, requestBody)
+}
+
+// DoRequestWith is DoRequest with the request URL and headers built by
+// transport, which may add to the route's own: a provider plugin channel
+// passes its adaptor to send the plugin credential.
+func (a *Adaptor) DoRequestWith(transport channel.Adaptor, c *gin.Context, info *relaycommon.RelayInfo, requestBody io.Reader) (any, error) {
 	if err := a.resolve(c, info); err != nil {
 		return nil, err
 	}
-	if !a.converted && a.converter != dto.AdvancedCustomConverterNone {
+	if !a.converted && !a.route.SupportsPassThroughBody() {
 		return nil, errors.New("advanced custom converter routes cannot be used with pass-through request body")
 	}
 
-	if info.RelayMode == relayconstant.RelayModeAudioTranscription ||
-		info.RelayMode == relayconstant.RelayModeAudioTranslation ||
-		(info.RelayMode == relayconstant.RelayModeImagesEdits && !isJSONRequest(c)) {
-		return channel.DoFormRequest(a, c, info, requestBody)
+	if UsesFormRequest(c, info) {
+		return channel.DoFormRequest(transport, c, info, requestBody)
 	}
 	if info.RelayMode == relayconstant.RelayModeRealtime {
-		return channel.DoWssRequest(a, c, info, requestBody)
+		return channel.DoWssRequest(transport, c, info, requestBody)
 	}
-	return channel.DoApiRequest(a, c, info, requestBody)
+	return channel.DoApiRequest(transport, c, info, requestBody)
+}
+
+// UsesFormRequest reports a request whose body is multipart form data.
+func UsesFormRequest(c *gin.Context, info *relaycommon.RelayInfo) bool {
+	return info.RelayMode == relayconstant.RelayModeAudioTranscription ||
+		info.RelayMode == relayconstant.RelayModeAudioTranslation ||
+		(info.RelayMode == relayconstant.RelayModeImagesEdits && !isJSONRequest(c))
 }
 
 func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, info *relaycommon.RelayInfo) (usage any, err *types.NewAPIError) {
@@ -207,20 +318,32 @@ func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, info *relaycom
 	}
 
 	switch a.converter {
-	case dto.AdvancedCustomConverterNone:
+	case dto.AdvancedCustomConverterSGLangRerank:
+		return a.doSGLangRerankResponse(c, resp, info)
+	case relayconvert.ConverterNone:
 		return a.doNativeResponse(c, resp, info)
-	case dto.AdvancedCustomConverterAnthropicMessagesToOpenAIChatCompletions,
-		dto.AdvancedCustomConverterGeminiGenerateContentToOpenAIChatCompletions:
+	case relayconvert.ConverterClaudeMessagesToOpenAIChat,
+		relayconvert.ConverterGeminiContentToOpenAIChat:
 		return a.openaiAdaptor.DoResponse(c, resp, info)
-	case dto.AdvancedCustomConverterOpenAIChatCompletionsToAnthropicMessages:
+	case relayconvert.ConverterOpenAIChatToClaudeMessages:
 		return a.claudeAdaptor.DoResponse(c, resp, info)
-	case dto.AdvancedCustomConverterOpenAIChatCompletionsToGeminiGenerateContent:
+	case relayconvert.ConverterOpenAIChatToGeminiContent:
 		return a.geminiAdaptor.DoResponse(c, resp, info)
-	case dto.AdvancedCustomConverterOpenAIChatCompletionsToOpenAIResponses:
+	case relayconvert.ConverterOpenAIResponsesToGemini:
+		return a.geminiAdaptor.DoResponse(c, resp, info)
+	case relayconvert.ConverterOpenAIChatToOpenAIResponses,
+		relayconvert.ConverterClaudeMessagesToOpenAIResponses,
+		relayconvert.ConverterGeminiContentToOpenAIResponses:
+		// These handlers convert the Responses upstream into info.RelayFormat.
 		if info.IsStream {
 			return openai.OaiResponsesToChatStreamHandler(c, info, resp)
 		}
 		return openai.OaiResponsesToChatHandler(c, info, resp)
+	case relayconvert.ConverterOpenAIResponsesToOpenAIChat:
+		if info.IsStream {
+			return openai.OaiChatToResponsesStreamHandler(c, info, resp)
+		}
+		return openai.OaiChatToResponsesHandler(c, info, resp)
 	default:
 		return nil, types.NewOpenAIError(fmt.Errorf("unsupported advanced custom converter: %s", a.converter), types.ErrorCodeInvalidRequest, http.StatusBadRequest, types.ErrOptionWithSkipRetry())
 	}
@@ -273,18 +396,18 @@ func (a *Adaptor) resolve(c *gin.Context, info *relaycommon.RelayInfo) error {
 	}
 
 	incomingPath := incomingRequestPath(c, info)
-	route, ok := config.MatchPath(incomingPath)
+	route, ok := config.MatchPathForModel(incomingPath, info.OriginModelName)
 	if ok {
 		route.Converter = strings.TrimSpace(route.Converter)
 		if route.Converter == "" {
-			route.Converter = dto.AdvancedCustomConverterNone
+			route.Converter = relayconvert.ConverterNone
 		}
 		a.route = route
 		a.converter = route.Converter
 		a.resolved = true
 		return nil
 	}
-	return fmt.Errorf("advanced custom channel does not support request path: %s", incomingPath)
+	return fmt.Errorf("advanced custom channel does not support request path %s for model %s", incomingPath, info.OriginModelName)
 }
 
 func incomingRequestPath(c *gin.Context, info *relaycommon.RelayInfo) string {
@@ -298,11 +421,33 @@ func incomingRequestPath(c *gin.Context, info *relaycommon.RelayInfo) string {
 }
 
 func (a *Adaptor) routeURL(info *relaycommon.RelayInfo) (string, error) {
-	parsedURL, err := resolveUpstreamTargetURL(applyUpstreamPathTemplate(strings.TrimSpace(a.route.UpstreamPath), info), info)
+	return buildRouteURL(a.route, a.converter, info, a.upstreamPath, a.upstreamURL)
+}
+
+// buildRouteURL builds the URL of a request on route. A non-empty
+// upstreamPath takes the place of the route's upstream_path: it joins the
+// channel base URL, or the origin of an upstream_path that is a full URL, and
+// {model} is not replaced in it. A non-empty upstreamURL takes the place of
+// the whole address.
+func buildRouteURL(route dto.AdvancedCustomRoute, converter string, info *relaycommon.RelayInfo, upstreamPath, upstreamURL string) (string, error) {
+	routePath := applyUpstreamPathTemplate(strings.TrimSpace(route.UpstreamPath), info)
+	if upstreamURL != "" {
+		routePath = upstreamURL
+	}
+	parsedURL, err := resolveUpstreamTargetURL(routePath, info)
 	if err != nil {
 		return "", err
 	}
-	if shouldUseGeminiStreamURL(a.converter, info) {
+	if upstreamPath != "" {
+		baseURL := info.ChannelBaseUrl
+		if !strings.HasPrefix(routePath, "/") {
+			baseURL = (&url.URL{Scheme: parsedURL.Scheme, User: parsedURL.User, Host: parsedURL.Host}).String()
+		}
+		if parsedURL, err = joinBaseURLAndUpstreamPath(baseURL, upstreamPath); err != nil {
+			return "", err
+		}
+	}
+	if shouldUseGeminiStreamURL(converter, info) {
 		useGeminiStreamGenerateContentURL(parsedURL)
 	}
 	if info != nil && info.RelayMode == relayconstant.RelayModeRealtime {
@@ -313,9 +458,9 @@ func (a *Adaptor) routeURL(info *relaycommon.RelayInfo) (string, error) {
 			parsedURL.Scheme = "ws"
 		}
 	}
-	if a.route.Auth != nil && strings.TrimSpace(a.route.Auth.Type) == dto.AdvancedCustomAuthTypeQuery {
+	if route.Auth != nil && strings.TrimSpace(route.Auth.Type) == dto.AdvancedCustomAuthTypeQuery {
 		query := parsedURL.Query()
-		query.Set(strings.TrimSpace(a.route.Auth.Name), applyAuthTemplate(a.route.Auth.Value, info.ApiKey))
+		query.Set(strings.TrimSpace(route.Auth.Name), applyAuthTemplate(route.Auth.Value, info.ApiKey))
 		parsedURL.RawQuery = query.Encode()
 	}
 	return parsedURL.String(), nil
@@ -378,7 +523,8 @@ func applyUpstreamPathTemplate(upstreamPath string, info *relaycommon.RelayInfo)
 func shouldUseGeminiStreamURL(converter string, info *relaycommon.RelayInfo) bool {
 	return info != nil &&
 		info.IsStream &&
-		converter == dto.AdvancedCustomConverterOpenAIChatCompletionsToGeminiGenerateContent
+		(converter == relayconvert.ConverterOpenAIChatToGeminiContent ||
+			converter == relayconvert.ConverterOpenAIResponsesToGemini)
 }
 
 func useGeminiStreamGenerateContentURL(parsedURL *url.URL) {
@@ -393,8 +539,8 @@ func useGeminiStreamGenerateContentURL(parsedURL *url.URL) {
 }
 
 func shouldApplyClaudeHeaders(converter string, info *relaycommon.RelayInfo) bool {
-	return converter == dto.AdvancedCustomConverterOpenAIChatCompletionsToAnthropicMessages ||
-		(converter == dto.AdvancedCustomConverterNone && info != nil && info.RelayFormat == types.RelayFormatClaude)
+	return converter == relayconvert.ConverterOpenAIChatToClaudeMessages ||
+		(converter == relayconvert.ConverterNone && info != nil && info.RelayFormat == types.RelayFormatClaude)
 }
 
 func applyClaudeHeaders(c *gin.Context, header *http.Header, info *relaycommon.RelayInfo) {
@@ -422,26 +568,43 @@ func isJSONRequest(c *gin.Context) bool {
 	return strings.Contains(strings.ToLower(c.Request.Header.Get("Content-Type")), "application/json")
 }
 
+// convertCrossProtocolChatRequest converts a Claude, Gemini, or Responses request into an
+// OpenAI chat completions request for an OpenAI-compatible upstream. Streaming requests
+// always ask the upstream for usage, because the downstream protocol reports usage in its
+// own format and never carries stream_options itself.
+func (a *Adaptor) convertCrossProtocolChatRequest(c *gin.Context, info *relaycommon.RelayInfo, converter string, request any) (any, error) {
+	result, err := service.ConvertRequestByID(c, info, converter, request)
+	if err != nil {
+		return nil, err
+	}
+	chatRequest, ok := result.Value.(*dto.GeneralOpenAIRequest)
+	if !ok {
+		return nil, fmt.Errorf("expected OpenAI chat completions request, got %T", result.Value)
+	}
+	if info.SupportStreamOptions && info.IsStream {
+		chatRequest.StreamOptions = &dto.StreamOptions{IncludeUsage: true}
+	}
+	return a.convertOpenAICompatibleRequest(c, info, chatRequest)
+}
+
+// convertCrossProtocolResponsesRequest converts a Claude or Gemini client
+// request for an OpenAI Responses upstream.
+func convertCrossProtocolResponsesRequest(c *gin.Context, info *relaycommon.RelayInfo, converter string, request any) (any, error) {
+	result, err := service.ConvertRequestByID(c, info, converter, request)
+	if err != nil {
+		return nil, err
+	}
+	responsesRequest, ok := result.Value.(*dto.OpenAIResponsesRequest)
+	if !ok {
+		return nil, fmt.Errorf("expected OpenAI Responses request, got %T", result.Value)
+	}
+	return responsesRequest, nil
+}
+
 func (a *Adaptor) convertOpenAICompatibleRequest(c *gin.Context, info *relaycommon.RelayInfo, request *dto.GeneralOpenAIRequest) (any, error) {
 	old := info.ChannelType
 	info.ChannelType = constant.ChannelTypeOpenAI
 	converted, err := a.openaiAdaptor.ConvertOpenAIRequest(c, info, request)
-	info.ChannelType = old
-	return converted, err
-}
-
-func (a *Adaptor) convertClaudeToOpenAICompatibleRequest(c *gin.Context, info *relaycommon.RelayInfo, request *dto.ClaudeRequest) (any, error) {
-	old := info.ChannelType
-	info.ChannelType = constant.ChannelTypeOpenAI
-	converted, err := a.openaiAdaptor.ConvertClaudeRequest(c, info, request)
-	info.ChannelType = old
-	return converted, err
-}
-
-func (a *Adaptor) convertGeminiToOpenAICompatibleRequest(c *gin.Context, info *relaycommon.RelayInfo, request *dto.GeminiChatRequest) (any, error) {
-	old := info.ChannelType
-	info.ChannelType = constant.ChannelTypeOpenAI
-	converted, err := a.openaiAdaptor.ConvertGeminiRequest(c, info, request)
 	info.ChannelType = old
 	return converted, err
 }
