@@ -66,7 +66,7 @@ func GetUserRanking(period RankingPeriod, limit int) ([]UserRank, error) {
 	var ranks []UserRank
 	err := query.
 		Group("user_id").
-		Order("quota_used desc").
+		Order("SUM(quota) desc").
 		Limit(limit).
 		Scan(&ranks).Error
 

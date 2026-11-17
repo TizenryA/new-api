@@ -1537,14 +1537,31 @@ func RootUserExists() bool {
 	return true
 }
 
-// UpdateUserGroup 只更新用户的分组字段，不影响其他任何字段
+// UpdateUserGroup updates only the group column. A real group change advances
+// the auth version, publishes the user cache, and revokes live sessions, the
+// same way a group edit through Update or Edit does.
 func UpdateUserGroup(userId int, newGroup string) error {
-	err := DB.Model(&User{}).Where("id = ?", userId).Update(commonGroupCol, newGroup).Error
-	if err != nil {
+	changed := false
+	err := DB.Transaction(func(tx *gorm.DB) error {
+		var user User
+		if err := tx.Where("id = ?", userId).First(&user).Error; err != nil {
+			return err
+		}
+		if user.Group == newGroup {
+			return nil
+		}
+		changed = true
+		if _, err := IncrementUserAuthVersionWithTx(tx, userId); err != nil {
+			return err
+		}
+		return tx.Model(&User{}).Where("id = ?", userId).Update(commonGroupCol, newGroup).Error
+	})
+	if err != nil || !changed {
 		return err
 	}
-	// 更新缓存
-	var user User
-	DB.Where("id = ?", userId).First(&user)
-	return updateUserCache(user)
+	if err := PublishUserAuthCache(userId); err != nil {
+		return err
+	}
+	_, err = RevokeAllUserSessions(userId, "user_security_changed")
+	return err
 }

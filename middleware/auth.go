@@ -237,11 +237,12 @@ func classifyDashboardCredential(c *gin.Context) (*model.UserBase, service.AuthI
 // accessTokenLookup is the per-request result of resolving an opaque dashboard
 // credential. A nil user with a nil err means the value is not a PAT.
 type accessTokenLookup struct {
-	ref    string
-	legacy bool
-	token  *model.UserAccessToken
-	user   *model.UserBase
-	err    error
+	ref      string
+	legacy   bool
+	relayAPI bool
+	token    *model.UserAccessToken
+	user     *model.UserBase
+	err      error
 }
 
 // lookupAccessToken resolves raw once per request, so the access audit and
@@ -254,6 +255,21 @@ func lookupAccessToken(c *gin.Context, raw string) *accessTokenLookup {
 	lookup := &accessTokenLookup{ref: ref}
 	c.Set(accessTokenLookupContextKey, lookup)
 	if !strings.HasPrefix(raw, model.AccessTokenPrefix) {
+		// A relay key is not a legacy dashboard token. Marking it legacy would
+		// skip every access-token route rule, including key reveal, key
+		// create, and log export.
+		if strings.HasPrefix(raw, "sk-") {
+			relayUser, relayErr := userFromRelayAPIToken(raw)
+			if relayErr != nil {
+				lookup.err = relayErr
+				return lookup
+			}
+			if relayUser != nil {
+				lookup.relayAPI = true
+				lookup.user = relayUser
+				return lookup
+			}
+		}
 		lookup.legacy = true
 		legacyUser, err := model.ValidateAccessToken(raw)
 		if err != nil && errors.Is(err, model.ErrDatabase) {
@@ -263,21 +279,6 @@ func lookupAccessToken(c *gin.Context, raw string) *accessTokenLookup {
 		if err == nil && legacyUser != nil && legacyUser.Id > 0 {
 			lookup.user, lookup.err = model.GetUserCache(legacyUser.Id)
 			return lookup
-		}
-		// Fork: an enabled relay API token (sk-xxx) authenticates as its owner,
-		// including AdminAuth. Other unmatched values keep the legacy access
-		// token result so retired dashboard tokens and random credentials are
-		// not looked up in the relay token table.
-		if strings.HasPrefix(raw, "sk-") {
-			relayUser, relayErr := userFromRelayAPIToken(raw)
-			if relayErr != nil {
-				lookup.err = relayErr
-				return lookup
-			}
-			if relayUser != nil {
-				lookup.user = relayUser
-				return lookup
-			}
 		}
 		lookup.err = err
 		return lookup
@@ -321,6 +322,24 @@ func userFromRelayAPIToken(raw string) (*model.UserBase, error) {
 	return user, nil
 }
 
+// relayAPISecretRoute keeps a relay API key inside the declared route map
+// and out of key reveal, key create or update, channel secret view, and export.
+func relayAPISecretRoute(path string, declared bool, rule accessTokenRouteRule) bool {
+	parts := strings.SplitN(path, " ", 2)
+	if len(parts) == 2 && strings.HasSuffix(parts[1], "/export") {
+		return true
+	}
+	if !declared {
+		return false
+	}
+	switch rule.scope {
+	case "api_key:reveal", "api_key:write", "channel:secret_view":
+		return true
+	default:
+		return false
+	}
+}
+
 func requestAccessTokenLookup(c *gin.Context) *accessTokenLookup {
 	value, _ := c.Get(accessTokenLookupContextKey)
 	lookup, _ := value.(*accessTokenLookup)
@@ -339,6 +358,16 @@ func enforceAccessTokenRoute(c *gin.Context, lookup *accessTokenLookup, abort bo
 	case declared && rule.kind == accessTokenRuleSession:
 		code, reason, message = "AUTH_SESSION_REQUIRED", "session_required", common.NewMessage(accessTokenSessionRequiredMsg)
 	case lookup.legacy:
+		return true
+	case lookup.relayAPI && relayAPISecretRoute(key, declared, rule):
+		code, reason, message = "ACCESS_TOKEN_SCOPE_DENIED", "scope_denied", common.NewMessage("The access token lacks the required permission: {{scope}}", map[string]any{"scope": rule.scope})
+		if abort && rule.scope != "" {
+			setAccessTokenAuditParam(c, "required_scope", rule.scope)
+		}
+	case lookup.relayAPI && !declared:
+		common.SysError(common.LogText("access token route is not declared: %s", key))
+		code, reason, message = "ACCESS_TOKEN_ROUTE_UNDECLARED", "route_undeclared", common.NewMessage("Unauthorized, insufficient privileges")
+	case lookup.relayAPI:
 		return true
 	case !declared:
 		common.SysError(common.LogText("access token route is not declared: %s", key))

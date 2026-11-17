@@ -89,6 +89,9 @@ func SetApiRouter(router *gin.Engine) {
 			userRoute.POST("/epay/notify", anonymousRequestBodyLimit, controller.EpayNotify)
 			userRoute.GET("/epay/notify", controller.EpayNotify)
 			userRoute.GET("/groups", controller.GetUserGroups)
+			// Public aggregate. The rankings page is anonymous; a 401 here
+			// makes the client refresh and bounce guests to sign-in.
+			userRoute.GET("/ranking", controller.GetUserRanking)
 
 			selfRoute := userRoute.Group("/")
 			selfRoute.Use(middleware.DisableCache(), middleware.UserAuth())
@@ -150,7 +153,6 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.DELETE("/oauth/bindings/:provider_id", controller.UnbindCustomOAuth)
 
 				// User ranking
-				selfRoute.GET("/ranking", controller.GetUserRanking)
 				selfRoute.GET("/ranking/self", controller.GetUserSelfRank)
 			}
 

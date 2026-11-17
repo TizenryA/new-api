@@ -44,19 +44,36 @@ export function RedemptionsUsesDialog({
   const { t } = useTranslation()
   const [uses, setUses] = useState<RedemptionUse[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    if (open && currentRow) {
-      setLoading(true)
-      getRedemptionUses(currentRow.id)
-        .then((result) => {
-          if (result.success && result.data) {
-            setUses(result.data)
-          }
-        })
-        .finally(() => setLoading(false))
+    if (!open || !currentRow) return
+    let cancelled = false
+    setLoading(true)
+    setError('')
+    setUses([])
+    getRedemptionUses(currentRow.id)
+      .then((result) => {
+        if (cancelled) return
+        if (result.success && result.data) {
+          setUses(result.data)
+          return
+        }
+        setError(result.message || t('Failed to load usage records'))
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        setError(
+          err instanceof Error ? err.message : t('Failed to load usage records')
+        )
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
-  }, [open, currentRow])
+  }, [open, currentRow, t])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -92,6 +109,10 @@ export function RedemptionsUsesDialog({
           {loading ? (
             <div className='text-center py-8 text-muted-foreground'>
               {t('Loading...')}
+            </div>
+          ) : error ? (
+            <div className='text-destructive py-8 text-center'>
+              {error}
             </div>
           ) : uses.length === 0 ? (
             <div className='text-center py-8 text-muted-foreground'>

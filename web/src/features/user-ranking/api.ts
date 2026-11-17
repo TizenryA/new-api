@@ -35,7 +35,8 @@ export async function getUserRanking(
 ): Promise<GetRankingResponse> {
   const { period = 'all', limit = 50 } = params
   const res = await api.get(
-    `/api/user/ranking?period=${period}&limit=${limit}`
+    `/api/user/ranking?period=${period}&limit=${limit}`,
+    { skipErrorHandler: true, skipAuthRefresh: true }
   )
   return res.data
 }

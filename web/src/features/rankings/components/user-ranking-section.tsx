@@ -48,26 +48,40 @@ export function UserRankingSection(props: UserRankingSectionProps) {
   const { t } = useTranslation()
   const [ranking, setRanking] = useState<UserRank[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     let cancelled = false
     const load = async () => {
       setLoading(true)
+      setError('')
       try {
         const result = await getUserRanking({
           period: toUserPeriod(props.period) as 'day' | 'week' | 'month' | 'all',
           limit: 50,
         })
-        if (!cancelled && result.success && result.data) {
+        if (cancelled) return
+        if (result.success && result.data) {
           setRanking(result.data)
+          return
         }
+        setRanking([])
+        setError(result.message || t('Unable to load rankings data'))
+      } catch (err) {
+        if (cancelled) return
+        setRanking([])
+        setError(
+          err instanceof Error ? err.message : t('Unable to load rankings data')
+        )
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
     load()
-    return () => { cancelled = true }
-  }, [props.period])
+    return () => {
+      cancelled = true
+    }
+  }, [props.period, t])
 
   const maxQuota = ranking.length > 0 ? ranking[0].quota_used : 1
 
@@ -107,6 +121,10 @@ export function UserRankingSection(props: UserRankingSectionProps) {
         {loading ? (
           <div className='text-muted-foreground/80 px-5 py-8 text-center text-sm'>
             {t('Loading...')}
+          </div>
+        ) : error ? (
+          <div className='text-destructive px-5 py-8 text-center text-sm'>
+            {error}
           </div>
         ) : ranking.length === 0 ? (
           <div className='text-muted-foreground/80 px-5 py-8 text-center text-sm'>

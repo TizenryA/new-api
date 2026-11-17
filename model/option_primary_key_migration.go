@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -59,6 +60,19 @@ func optionsKeyIsUnique(db *gorm.DB) (bool, error) {
 			return true, nil
 		}
 	}
+	if db.Dialector.Name() == "mysql" {
+		var count int64
+		if err := db.Raw(`
+SELECT COUNT(*)
+FROM information_schema.statistics
+WHERE table_schema = DATABASE()
+  AND table_name = 'options'
+  AND column_name = 'key'
+  AND non_unique = 0`).Scan(&count).Error; err != nil {
+			return false, fmt.Errorf("inspect options constraints: %w", err)
+		}
+		return count > 0, nil
+	}
 	if db.Dialector.Name() != "postgres" {
 		return false, nil
 	}
@@ -82,25 +96,40 @@ WHERE constraint_meta.conrelid = to_regclass('options')
 func withOptionPrimaryKeyLock(db *gorm.DB, fn func(*gorm.DB) error) error {
 	switch db.Dialector.Name() {
 	case "mysql":
+		// GET_LOCK belongs to one session. The rebuild has to use that same
+		// session. A pool of size 1 otherwise waits on the connection the
+		// lock is already holding.
 		sqlDB, err := db.DB()
 		if err != nil {
 			return fmt.Errorf("lock options table: %w", err)
 		}
 		ctx := context.Background()
-		conn, err := sqlDB.Conn(ctx)
+		sqlConn, err := sqlDB.Conn(ctx)
 		if err != nil {
 			return fmt.Errorf("lock options table: %w", err)
 		}
-		defer conn.Close()
+		defer sqlConn.Close()
 		var acquired int
-		if err := conn.QueryRowContext(ctx, "SELECT GET_LOCK(?, 60)", optionPrimaryKeyLockName).Scan(&acquired); err != nil {
+		if err := sqlConn.QueryRowContext(ctx, "SELECT GET_LOCK(?, 60)", optionPrimaryKeyLockName).Scan(&acquired); err != nil {
 			return fmt.Errorf("lock options table: %w", err)
 		}
 		if acquired != 1 {
 			return fmt.Errorf("lock options table: timeout")
 		}
-		defer conn.ExecContext(ctx, "SELECT RELEASE_LOCK(?)", optionPrimaryKeyLockName)
-		return fn(db)
+		defer sqlConn.ExecContext(ctx, "SELECT RELEASE_LOCK(?)", optionPrimaryKeyLockName)
+		dialector, ok := mysqlDialectorOnConn(db.Dialector, sqlConn)
+		if !ok {
+			return fmt.Errorf("lock options table: unsupported mysql dialector %T", db.Dialector)
+		}
+		locked, err := gorm.Open(dialector, &gorm.Config{
+			Logger:      db.Logger,
+			NowFunc:     db.NowFunc,
+			PrepareStmt: false,
+		})
+		if err != nil {
+			return fmt.Errorf("lock options table: %w", err)
+		}
+		return fn(locked)
 	case "postgres":
 		return db.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Exec("SELECT pg_advisory_xact_lock(?)", optionPrimaryKeyLockID).Error; err != nil {
@@ -206,6 +235,29 @@ func swapOptionTables(db *gorm.DB, tmp, backup string) error {
 		return fmt.Errorf("rename %s to options: %w", tmp, err)
 	}
 	return nil
+}
+
+func mysqlDialectorOnConn(base gorm.Dialector, conn gorm.ConnPool) (gorm.Dialector, bool) {
+	switch dialector := base.(type) {
+	case *mysql.Dialector:
+		config := *dialector.Config
+		config.Conn = conn
+		clone := *dialector
+		clone.Config = &config
+		return &clone, true
+	case mysql.Dialector:
+		config := *dialector.Config
+		config.Conn = conn
+		dialector.Config = &config
+		return dialector, true
+	case mysqlMigrationDialector:
+		config := *dialector.Config
+		config.Conn = conn
+		dialector.Config = &config
+		return dialector, true
+	default:
+		return nil, false
+	}
 }
 
 func optionSafeIdent(name string) bool {

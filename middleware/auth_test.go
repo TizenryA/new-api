@@ -606,6 +606,56 @@ func TestApplyWebSocketSubprotocolAuthorizationOverridesWithInsecureKey(t *testi
 	assert.Equal(t, "Bearer sk-from-protocol", header.Get("Authorization"))
 }
 
+func TestRelayAPITokenStaysInsideDeclaredRoutes(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	lookup := &accessTokenLookup{
+		relayAPI: true,
+		user:     &model.UserBase{Id: 7, Username: "bot", Role: common.RoleRootUser},
+	}
+	routes := []struct {
+		method string
+		path   string
+		allow  bool
+	}{
+		{http.MethodPost, "/api/token/:id/key", false},
+		{http.MethodPost, "/api/token/", false},
+		{http.MethodPost, "/api/token/batch/keys", false},
+		{http.MethodGet, "/api/log/export", false},
+		{http.MethodPost, "/api/channel/:id/key", false},
+		{http.MethodGet, "/api/user/search", true},
+		{http.MethodPatch, "/api/user/:id/group", true},
+		{http.MethodGet, "/api/not-declared", false},
+	}
+	for _, route := range routes {
+		t.Run(route.method+" "+route.path, func(t *testing.T) {
+			router := gin.New()
+			handler := func(c *gin.Context) {
+				if enforceAccessTokenRoute(c, lookup, true) {
+					c.Status(http.StatusNoContent)
+				}
+			}
+			switch route.method {
+			case http.MethodGet:
+				router.GET(route.path, handler)
+			case http.MethodPost:
+				router.POST(route.path, handler)
+			case http.MethodPatch:
+				router.PATCH(route.path, handler)
+			}
+			requestURL := route.path
+			requestURL = strings.ReplaceAll(requestURL, ":id", "1")
+			request := httptest.NewRequest(route.method, requestURL, nil)
+			response := httptest.NewRecorder()
+			router.ServeHTTP(response, request)
+			if route.allow {
+				assert.Equal(t, http.StatusNoContent, response.Code)
+				return
+			}
+			assert.Equal(t, http.StatusForbidden, response.Code)
+		})
+	}
+}
+
 func TestApplyWebSocketSubprotocolAuthorizationReadsRepeatedHeaders(t *testing.T) {
 	header := http.Header{}
 	header.Set("Authorization", "Bearer sk-original")

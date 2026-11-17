@@ -382,6 +382,40 @@ func TestUpdatePasskeyAssertionStateCannotRewriteRegistrationIdentity(t *testing
 	assert.ErrorIs(t, UpdatePasskeyAssertionState(user.Id, validated, usedAt, "example.com"), ErrPasskeyNotFound)
 }
 
+func TestUpdateUserGroupAdvancesAuthVersionAndRevokesSessions(t *testing.T) {
+	truncateTables(t)
+	user := User{
+		Username:    "group-patch-user",
+		Password:    "password",
+		Role:        common.RoleCommonUser,
+		Status:      common.UserStatusEnabled,
+		Group:       "default",
+		AuthVersion: 1,
+	}
+	require.NoError(t, DB.Create(&user).Error)
+	session := UserSession{
+		SID:             "group-patch-session",
+		UserID:          user.Id,
+		Version:         1,
+		UserAuthVersion: 1,
+		Status:          UserSessionStatusActive,
+		ExpiresAt:       time.Now().Add(time.Hour).Unix(),
+	}
+	require.NoError(t, DB.Create(&session).Error)
+
+	require.NoError(t, UpdateUserGroup(user.Id, "vip"))
+	assertUserAuthVersion(t, user.Id, 2)
+	var stored User
+	require.NoError(t, DB.First(&stored, user.Id).Error)
+	assert.Equal(t, "vip", stored.Group)
+	var storedSession UserSession
+	require.NoError(t, DB.Where("sid = ?", session.SID).First(&storedSession).Error)
+	assert.Equal(t, UserSessionStatusRevoked, storedSession.Status)
+
+	require.NoError(t, UpdateUserGroup(user.Id, "vip"))
+	assertUserAuthVersion(t, user.Id, 2)
+}
+
 func assertUserAuthVersion(t *testing.T, userID int, expected int64) {
 	t.Helper()
 	var version int64

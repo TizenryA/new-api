@@ -78,7 +78,10 @@ import { LogCostDisplay } from '../log-cost-display'
 import { ModelBadge } from '../model-badge'
 import { RequestPluginLogMarker } from '../request-plugin-record'
 import { TimingMetricsCell, StreamTpsCell } from '../timing-metrics-cell'
-import { useUsageLogsContext } from '../usage-logs-provider'
+import {
+  useLogsViewScope,
+  useUsageLogsContext,
+} from '../usage-logs-provider'
 
 interface DetailSegment {
   text: string
@@ -579,21 +582,26 @@ export function useCommonLogsColumns(
       cell: function UserCell({ row }) {
         const { sensitiveVisible, setSelectedUserId, setUserInfoDialogOpen } =
           useUsageLogsContext()
+        const { isAdminView } = useLogsViewScope()
         const log = row.original
         if (!log.username && !(log.user_id > 0)) return null
         const label = log.username
           ? `${log.username}${log.user_id > 0 ? ` #${log.user_id}` : ''}`
           : `#${log.user_id}`
+        const openDetails = isAdminView
+          ? (event: { stopPropagation: () => void }) => {
+              event.stopPropagation()
+              setSelectedUserId(log.user_id)
+              setUserInfoDialogOpen(true)
+            }
+          : undefined
 
         return (
           <button
             type='button'
             className='flex items-center gap-1.5 text-left'
-            onClick={(e) => {
-              e.stopPropagation()
-              setSelectedUserId(log.user_id)
-              setUserInfoDialogOpen(true)
-            }}
+            onClick={openDetails}
+            disabled={!isAdminView}
           >
             <Avatar className='ring-border/60 size-6 ring-1 max-sm:hidden'>
               <AvatarFallback
